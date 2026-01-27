@@ -135,6 +135,21 @@
   .
 )
 
+; Union variant with type arguments: RenderPerRepoChart Int Int
+; Space after the constructor name when followed by type arguments
+(union_variant
+  (upper_case_identifier) @append_space
+  .
+  (_)
+)
+
+; Space between consecutive type arguments in union variants
+(union_variant
+  (_) @append_space
+  .
+  (_)
+)
+
 ; Type alias
 (type_alias_declaration
   (type) @append_space
@@ -152,6 +167,19 @@
 (type_alias_declaration
   (type_expression) @append_indent_end
   .
+)
+
+; Blank line after type alias when followed by other declarations
+(
+  (type_alias_declaration) @append_hardline
+  .
+  [
+    (value_declaration)
+    (type_annotation)
+    (type_declaration)
+    (type_alias_declaration)
+    (port_annotation)
+  ]
 )
 
 ; ==============================================================================
@@ -222,6 +250,7 @@
 ; Allow blank lines between declarations
 [
   (value_declaration)
+  (type_annotation)
   (port_annotation)
 ] @allow_blank_line_before
 
@@ -370,15 +399,28 @@
 ; Function calls
 ; ==============================================================================
 
-; func arg1 arg2
+; Spaced softline between consecutive children in function calls (target and args)
+; In single-line mode: space between args
+; In multi-line mode: each arg on its own line
 (function_call_expr
-  target: (_) @append_space
+  (_) @append_spaced_softline
+  .
+  (_)
 )
 
+; Indent the arguments when multi-line
+; Start indent after the first child (the function being called)
 (function_call_expr
-  arg: (_) @append_spaced_softline
   .
-  arg: (_)
+  (_) @append_indent_start
+  .
+  (_)
+)
+
+; End indent after the last child
+(function_call_expr
+  (_) @append_indent_end
+  .
 )
 
 ; ==============================================================================
@@ -488,18 +530,38 @@
 ; Parenthesized expressions
 ; ==============================================================================
 
+; Multi-line parenthesized expressions should have proper line breaks
+; Single-line ones should have no extra space: (foo)
+(parenthesized_expr
+  "(" @append_empty_softline @append_indent_start
+  ")" @prepend_empty_softline @prepend_indent_end
+)
+
+; For single-line parenthesized expressions, remove the softline space
 (parenthesized_expr
   "(" @append_antispace
+  (#single_line_only!)
+)
+(parenthesized_expr
   ")" @prepend_antispace
+  (#single_line_only!)
 )
 
 ; ==============================================================================
 ; Patterns
 ; ==============================================================================
 
-; Union patterns: Just x
+; Union patterns: Just x, Result.Ok value, Http.BadStatus_ metadata _
 (union_pattern
   (upper_case_qid) @append_space
+  .
+  (_)
+)
+
+; Add spaces between all pattern arguments in union patterns
+; Handles patterns like: Http.BadStatus_ metadata _
+(union_pattern
+  (_) @append_space
   .
   (_)
 )

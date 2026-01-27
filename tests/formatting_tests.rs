@@ -168,6 +168,11 @@ fn test_pipe_operators_formatting() {
     run_fixture_test("pipe_operators");
 }
 
+#[test]
+fn test_parenthesized_pipe_formatting() {
+    run_fixture_test("parenthesized_pipe");
+}
+
 // ============================================================================
 // Comment Tests
 // ============================================================================
@@ -335,6 +340,73 @@ first ( a, b ) =
     assert!(
         result.is_ok(),
         "Should handle pattern matching in function arguments"
+    );
+}
+
+#[test]
+fn test_function_call_in_if_else_branch() {
+    // Issue: Function calls inside if-then-else branches like:
+    //   else interpolate "{0}" [ arg1, arg2 ]
+    // were being formatted with the list argument at wrong indentation:
+    //   else interpolate "{0}"
+    //   [ arg1, arg2 ]
+    // which breaks the function application
+    let input = r#"module Main exposing (url)
+
+
+url =
+    if isDevelopmentMode then
+        "/fixtures/repos.json"
+    else
+        interpolate "{0}/repos/{1}/{2}"
+            [ githubApiUrl, accountName, repoName ]
+"#;
+    let result = format_elm(input);
+    assert!(
+        result.is_ok(),
+        "Should format function call in if-else branch"
+    );
+    let formatted = result.unwrap();
+    // The list argument should be properly indented as a continuation of the function call
+    // NOT at the same level as 'else'
+    assert!(
+        !formatted.contains("else interpolate \"{0}/repos/{1}/{2}\"\n    ["),
+        "Function argument should not be at same indent level as 'else', got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_case_pattern_with_multiple_args() {
+    // Issue: Case patterns like `Http.BadStatus_ metadata _` were being
+    // formatted as `Http.BadStatus_ metadata_` (missing space)
+    let input = r#"module Main exposing (handle)
+
+
+handle response =
+    case response of
+        Http.BadStatus_ metadata _ ->
+            metadata.statusCode
+
+        Http.GoodStatus_ metadata body ->
+            body
+"#;
+    let result = format_elm(input);
+    assert!(
+        result.is_ok(),
+        "Should format case patterns with multiple args"
+    );
+    let formatted = result.unwrap();
+    // Space should be preserved between pattern arguments
+    assert!(
+        formatted.contains("Http.BadStatus_ metadata _"),
+        "Should preserve space between pattern arguments, got:\n{}",
+        formatted
+    );
+    assert!(
+        formatted.contains("Http.GoodStatus_ metadata body"),
+        "Should preserve space between pattern arguments, got:\n{}",
+        formatted
     );
 }
 

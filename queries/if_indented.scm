@@ -15,14 +15,19 @@
 ; Note: In tree-sitter-elm, chained else-if is NOT a nested if_else_expr.
 ; Instead, it's: if_else_expr = "if" expr "then" expr ("else" "if" expr "then" expr)* "else" expr
 
-; First "if": space after
+; All "if": space after
 (if_else_expr
-  . "if" @append_space
+  "if" @append_space
 )
 
-; All "then": new line before, start indent, space after
+; First "if": start indent for the condition and branches
 (if_else_expr
-  "then" @prepend_hardline @prepend_indent_start @append_space
+  . "if" @append_indent_start
+)
+
+; All "then": new line before, space after
+(if_else_expr
+  "then" @prepend_hardline @append_space
 )
 
 ; All "else": new line before
@@ -36,18 +41,26 @@
   .
 )
 
-; Middle "else" (followed by "if"): add newline after and start new indent block
+; Middle "else" (followed by "if"): add space after (for the "else if" to stay on same level conceptually)
+; then add newline and indent for the nested structure
 (if_else_expr
-  "else" @append_hardline @append_indent_start
+  "else" @append_space @append_indent_start
   .
   "if"
 )
 
-; Middle "if" (after "else"): space after
+; (Middle "if" after "else" gets space from the "All if" rule above)
+
+; Close the extra indent before middle "if" ends (when we have else if chains)
+; This balances the indent opened at "else" above
 (if_else_expr
   "else"
   .
-  "if" @append_space
+  "if"
+  (_)
+  "then"
+  (_)
+  "else" @prepend_indent_end
 )
 
 ; Final "else" (not followed by "if"): add space after
