@@ -93,6 +93,11 @@ fn test_module_declaration_formatting() {
 }
 
 #[test]
+fn test_port_module_formatting() {
+    run_fixture_test("port_module");
+}
+
+#[test]
 fn test_imports_formatting() {
     run_fixture_test("imports");
 }
@@ -130,11 +135,7 @@ fn test_case_expression_formatting() {
     run_fixture_test("case_expression");
 }
 
-// NOTE: let_expression test is currently disabled
-// due to a Topiary query issue ("Trying to close an unopened indentation block").
-
 #[test]
-#[ignore = "Topiary query has indent block issue with let expressions"]
 fn test_let_expression_formatting() {
     run_fixture_test("let_expression");
 }

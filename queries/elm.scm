@@ -35,6 +35,11 @@
   (exposing_list) @prepend_space
 )
 
+; port module Main exposing (..)
+(module_declaration
+  (port) @append_space
+)
+
 ; Add newlines after module declaration
 (file
   (module_declaration) @append_hardline @append_hardline
@@ -243,21 +248,15 @@
 ; ==============================================================================
 
 ; let ... in - these are anonymous nodes
+; Open indent after let for the declarations
 (let_in_expr
   "let" @append_hardline @append_indent_start
 )
 
+; Close indent from let before in, add newlines around in
+; Note: elm-format style does NOT indent the body after in
 (let_in_expr
-  "in" @prepend_indent_end @prepend_hardline @append_hardline @append_indent_start
-)
-
-(let_in_expr
-  .
-  "let"
-  (_)
-  "in"
-  (_) @append_indent_end
-  .
+  "in" @prepend_indent_end @prepend_hardline @append_hardline
 )
 
 ; Newlines between let declarations
