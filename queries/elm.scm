@@ -184,10 +184,35 @@
 )
 
 ; Type application: List Int
+; Space after the type name when followed by arguments
+(type_ref
+  (upper_case_qid) @append_space
+  .
+  (_)
+)
+
+; Space between type arguments
+; This handles: Program Model Msg, Result Error Value, etc.
+; Using wildcards without field names to properly match repeated siblings
 (type_ref
   (_) @append_space
   .
   (_)
+)
+
+; Space after ) when followed by another type argument
+(type_ref
+  ")" @append_space
+  .
+  (_)
+)
+
+; No extra space inside parentheses in type expressions
+(type_ref
+  "(" @append_antispace
+)
+(type_ref
+  ")" @prepend_antispace
 )
 
 ; ==============================================================================
@@ -195,9 +220,14 @@
 ; ==============================================================================
 
 ; Allow blank lines between declarations
-(value_declaration) @allow_blank_line_before
+[
+  (value_declaration)
+  (port_annotation)
+] @allow_blank_line_before
 
 ; Blank line between value declarations
+; The @allow_blank_line_before on value_declaration preserves blank lines from input
+; This rule adds a single hardline; blank lines are preserved via @allow_blank_line_before
 (
   (value_declaration) @append_hardline
   .
@@ -206,6 +236,7 @@
     (type_annotation)
     (type_declaration)
     (type_alias_declaration)
+    (port_annotation)
   ]
 )
 
@@ -218,15 +249,16 @@
 )
 
 ; Add spaces between all patterns (arguments) in function declarations
+; Use wildcards without field names to properly match repeated siblings
 (function_declaration_left
-  pattern: (_) @append_space
+  (_) @append_space
   .
-  pattern: (_)
+  (_)
 )
 
 ; Space after the last pattern before the equals sign
 (function_declaration_left
-  pattern: (_) @append_space
+  (_) @append_space
   .
 )
 
@@ -235,9 +267,19 @@
   (eq) @prepend_space @append_spaced_softline @append_indent_start
 )
 
+; Close indent for function declarations: f x = body
 (value_declaration
   .
   (function_declaration_left)
+  (eq)
+  (_) @append_indent_end
+  .
+)
+
+; Close indent for pattern declarations: (a, b) = body
+(value_declaration
+  .
+  (pattern)
   (eq)
   (_) @append_indent_end
   .
@@ -364,6 +406,18 @@
   "}" @prepend_spaced_softline @prepend_indent_end
 )
 
+; Empty record {} - remove the spaced softline for empty records
+(record_expr
+  "{" @append_antispace
+  .
+  "}"
+)
+(record_expr
+  "{"
+  .
+  "}" @prepend_antispace
+)
+
 (record_expr
   "," @append_space
 )
@@ -471,6 +525,25 @@
 
 (port_annotation
   (port) @append_space
+)
+
+; Space around the colon in port annotations
+(port_annotation
+  (lower_case_identifier) @append_space
+  (colon) @append_space
+)
+
+; Blank line after port annotation
+(
+  (port_annotation) @append_hardline
+  .
+  [
+    (value_declaration)
+    (type_annotation)
+    (type_declaration)
+    (type_alias_declaration)
+    (port_annotation)
+  ]
 )
 
 ; ==============================================================================
