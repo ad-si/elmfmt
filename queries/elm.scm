@@ -263,6 +263,8 @@
     (type_declaration)
     (type_alias_declaration)
     (port_annotation)
+    (line_comment)
+    (block_comment)
   ]
   (#delimiter! "\n\n")
 )
@@ -328,15 +330,45 @@
   "in" @prepend_indent_end @prepend_hardline @append_hardline
 )
 
-; Newlines between let declarations
+; Newlines between let declarations, allowing blank lines to be preserved
+; value_declaration -> value_declaration
 (let_in_expr
   (value_declaration) @append_hardline
+  .
+  (value_declaration) @allow_blank_line_before
+)
+
+; value_declaration -> type_annotation (new binding group with type sig)
+(let_in_expr
+  (value_declaration) @append_hardline
+  .
+  (type_annotation) @allow_blank_line_before
+)
+
+; type_annotation -> value_declaration (type sig followed by its implementation)
+(let_in_expr
+  (type_annotation) @append_hardline
   .
   (value_declaration)
 )
 
+; type_annotation -> type_annotation (consecutive type sigs, rare but possible)
+(let_in_expr
+  (type_annotation) @append_hardline
+  .
+  (type_annotation) @allow_blank_line_before
+)
+
+; Handle "in" after value_declaration
 (let_in_expr
   (value_declaration) @append_hardline
+  .
+  "in"
+)
+
+; Handle "in" after type_annotation (orphan type sig, shouldn't happen but handle gracefully)
+(let_in_expr
+  (type_annotation) @append_hardline
   .
   "in"
 )

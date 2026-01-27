@@ -13,3 +13,17 @@ tuplePattern =
 
 
 nextDeclaration = 42
+
+
+-- Test case: blank line between let bindings should be preserved
+multipleLetBindings =
+  let
+    first x =
+      {
+        value = x + 1
+      }
+
+    second y =
+      first y
+  in
+  second 42
