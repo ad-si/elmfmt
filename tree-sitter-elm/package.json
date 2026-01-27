@@ -1,0 +1,59 @@
+{
+  "name": "@elm-tooling/tree-sitter-elm",
+  "version": "5.9.0",
+  "description": "Tree sitter definitions for elm",
+  "main": "bindings/node",
+  "types": "bindings/node",
+  "keywords": [
+    "elm",
+    "elm-lang",
+    "tree-sitter",
+    "parser",
+    "lexer"
+  ],
+  "files": [
+    "grammar.js",
+    "tree-sitter.json",
+    "binding.gyp",
+    "prebuilds/**",
+    "bindings/node/*",
+    "queries/*",
+    "src/**",
+    "*.wasm"
+  ],
+  "author": "Razze",
+  "license": "MIT",
+  "dependencies": {
+    "node-addon-api": "^8.2.1",
+    "node-gyp-build": "^4.8.2"
+  },
+  "devDependencies": {
+    "prebuildify": "^6.0.1",
+    "tree-sitter-cli": "^0.26.3"
+  },
+  "peerDependencies": {
+    "tree-sitter": "^0.25.0"
+  },
+  "peerDependenciesMeta": {
+    "tree-sitter": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "install": "node-gyp-build",
+    "prestart": "tree-sitter build --wasm",
+    "start": "tree-sitter playground",
+    "build": "tree-sitter generate",
+    "parse-basic": "tree-sitter parse ./examples/basic.elm",
+    "parse-test": "tree-sitter parse --debug ./examples/test.elm",
+    "test": "tree-sitter test && script/parse-examples",
+    "test-skip-download": "tree-sitter test && script/parse-examples -s",
+    "test-full": "tree-sitter test && script/parse-examples-full",
+    "test-full-skip-download": "tree-sitter test && script/parse-examples-full -s",
+    "test-only": "tree-sitter test",
+    "test-highlighting": "tree-sitter highlight test/highlight/basic.elm",
+    "test-tags": "tree-sitter tags test/highlight/basic.elm",
+    "generate-wasm": "tree-sitter build --wasm && mv ./tree-sitter-elm.wasm ./docs/js/tree-sitter-elm.wasm"
+  },
+  "repository": "https://github.com/elm-tooling/tree-sitter-elm"
+}
