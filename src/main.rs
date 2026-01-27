@@ -12,12 +12,37 @@ const CONFIG_FILE_NAME: &str = "elmfmt.yaml";
 /// Default number of spaces for indentation
 const DEFAULT_INDENT_SPACES: u8 = 2;
 
+/// Style for if-then-else expressions
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum IfStyle {
+    /// Indented style (default):
+    /// ```elm
+    /// if condition
+    ///   then expr1
+    ///   else expr2
+    /// ```
+    #[default]
+    Indented,
+    /// Hanging style:
+    /// ```elm
+    /// if condition then
+    ///     expr1
+    /// else
+    ///     expr2
+    /// ```
+    Hanging,
+}
+
 /// Configuration for elmfmt
 #[derive(Debug, Deserialize, Default)]
 #[serde(default)]
 struct Config {
     /// Number of spaces to use for indentation
     indentation: Option<u8>,
+    /// Style for if-then-else expressions
+    #[serde(rename = "if-style")]
+    if_style: IfStyle,
 }
 
 impl Config {
@@ -85,8 +110,22 @@ struct Args {
     skip_idempotence: bool,
 }
 
-/// The Elm formatting query file
-const ELM_QUERY: &str = include_str!("../queries/elm.scm");
+/// The base Elm formatting query file (without if-expression rules)
+const ELM_QUERY_BASE: &str = include_str!("../queries/elm.scm");
+
+/// The hanging style if-expression query
+const IF_HANGING_QUERY: &str = include_str!("../queries/if_hanging.scm");
+
+/// The indented style if-expression query
+const IF_INDENTED_QUERY: &str = include_str!("../queries/if_indented.scm");
+
+fn build_query(if_style: IfStyle) -> String {
+    let if_query = match if_style {
+        IfStyle::Hanging => IF_HANGING_QUERY,
+        IfStyle::Indented => IF_INDENTED_QUERY,
+    };
+    format!("{}\n\n{}", ELM_QUERY_BASE, if_query)
+}
 
 fn main() -> Result<()> {
     let args = Args::parse();
@@ -110,8 +149,11 @@ fn main() -> Result<()> {
     // Get the tree-sitter grammar for Elm
     let grammar = tree_sitter_elm::LANGUAGE;
 
+    // Build the combined query based on configuration
+    let query_str = build_query(config.if_style);
+
     // Create the Topiary query
-    let query = TopiaryQuery::new(&grammar.into(), ELM_QUERY)
+    let query = TopiaryQuery::new(&grammar.into(), &query_str)
         .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
 
     // Create the language configuration

@@ -310,25 +310,9 @@
 ; If expressions
 ; ==============================================================================
 
-; if cond then expr else expr - "if", "then", "else" are anonymous nodes
-(if_else_expr
-  "if" @append_space
-  "then" @prepend_space @append_spaced_softline @append_indent_start
-  "else" @prepend_indent_end @prepend_spaced_softline @append_spaced_softline @append_indent_start
-)
-
-(if_else_expr
-  "else"
-  (_) @append_indent_end
-  .
-)
-
-; Chained else if - don't double indent
-(if_else_expr
-  "else" @append_space
-  .
-  (if_else_expr)
-)
+; NOTE: If expression formatting is handled by separate query files based on
+; the configured if-style (hanging or indented). The rules are combined at
+; runtime from queries/if_hanging.scm or queries/if_indented.scm.
 
 ; ==============================================================================
 ; Anonymous functions (lambdas)

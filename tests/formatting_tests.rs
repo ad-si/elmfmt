@@ -3,15 +3,41 @@ use std::fs;
 use std::path::PathBuf;
 use topiary_core::{formatter, Language, Operation, TopiaryQuery};
 
-const ELM_QUERY: &str = include_str!("../queries/elm.scm");
+const ELM_QUERY_BASE: &str = include_str!("../queries/elm.scm");
+const IF_HANGING_QUERY: &str = include_str!("../queries/if_hanging.scm");
+const IF_INDENTED_QUERY: &str = include_str!("../queries/if_indented.scm");
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum IfStyle {
+    #[default]
+    Indented,
+    Hanging,
+}
+
+fn build_query(if_style: IfStyle) -> String {
+    let if_query = match if_style {
+        IfStyle::Hanging => IF_HANGING_QUERY,
+        IfStyle::Indented => IF_INDENTED_QUERY,
+    };
+    format!("{}\n\n{}", ELM_QUERY_BASE, if_query)
+}
 
 fn format_elm(input: &str) -> Result<String> {
-    format_elm_with_indent(input, "  ")
+    format_elm_with_options(input, "  ", IfStyle::default())
 }
 
 fn format_elm_with_indent(input: &str, indent: &str) -> Result<String> {
+    format_elm_with_options(input, indent, IfStyle::default())
+}
+
+fn format_elm_with_if_style(input: &str, if_style: IfStyle) -> Result<String> {
+    format_elm_with_options(input, "  ", if_style)
+}
+
+fn format_elm_with_options(input: &str, indent: &str, if_style: IfStyle) -> Result<String> {
     let grammar = tree_sitter_elm::LANGUAGE;
-    let query = TopiaryQuery::new(&grammar.into(), ELM_QUERY)
+    let query_str = build_query(if_style);
+    let query = TopiaryQuery::new(&grammar.into(), &query_str)
         .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
 
     let language = Language {
@@ -104,20 +130,13 @@ fn test_case_expression_formatting() {
     run_fixture_test("case_expression");
 }
 
-// NOTE: let_expression and if_expression tests are currently disabled
+// NOTE: let_expression test is currently disabled
 // due to a Topiary query issue ("Trying to close an unopened indentation block").
-// These tests document known limitations in the formatting rules.
 
 #[test]
 #[ignore = "Topiary query has indent block issue with let expressions"]
 fn test_let_expression_formatting() {
     run_fixture_test("let_expression");
-}
-
-#[test]
-#[ignore = "Topiary query has indent block issue with if expressions"]
-fn test_if_expression_formatting() {
-    run_fixture_test("if_expression");
 }
 
 #[test]
@@ -389,6 +408,118 @@ type Msg
     assert!(
         formatted.contains("\n  Click"),
         "Should use 2-space indent for type variants, got:\n{}",
+        formatted
+    );
+}
+
+// ============================================================================
+// If-Style Configuration Tests
+// ============================================================================
+
+#[test]
+fn test_if_style_indented_simple() {
+    let input = r#"module Main exposing (abs)
+
+
+abs n =
+    if n < 0 then -n else n
+"#;
+    let result = format_elm_with_if_style(input, IfStyle::Indented);
+    assert!(result.is_ok(), "Should format with indented if-style");
+    let formatted = result.unwrap();
+    // Indented style: "then" and "else" are on their own lines, indented
+    assert!(
+        formatted.contains("if n < 0\n    then"),
+        "Should have 'then' on new line after condition, got:\n{}",
+        formatted
+    );
+    assert!(
+        formatted.contains("\n    else"),
+        "Should have 'else' on new line, indented, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_if_style_hanging_simple() {
+    let input = r#"module Main exposing (abs)
+
+
+abs n =
+    if n < 0 then -n else n
+"#;
+    let result = format_elm_with_if_style(input, IfStyle::Hanging);
+    assert!(result.is_ok(), "Should format with hanging if-style");
+    let formatted = result.unwrap();
+    // Hanging style: "then" is on same line as condition
+    assert!(
+        formatted.contains("if n < 0 then"),
+        "Should have 'then' on same line as condition, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_if_style_indented_nested() {
+    let input = r#"module Main exposing (sign)
+
+
+sign n =
+    if n > 0 then 1 else if n < 0 then -1 else 0
+"#;
+    let result = format_elm_with_if_style(input, IfStyle::Indented);
+    assert!(
+        result.is_ok(),
+        "Should format nested if with indented style"
+    );
+    let formatted = result.unwrap();
+    // Should have the indented style pattern
+    assert!(
+        formatted.contains("if n > 0\n"),
+        "Should have condition followed by newline, got:\n{}",
+        formatted
+    );
+    assert!(
+        formatted.contains("then 1"),
+        "Should have 'then' with value, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_if_style_hanging_nested() {
+    let input = r#"module Main exposing (sign)
+
+
+sign n =
+    if n > 0 then 1 else if n < 0 then -1 else 0
+"#;
+    let result = format_elm_with_if_style(input, IfStyle::Hanging);
+    assert!(result.is_ok(), "Should format nested if with hanging style");
+    let formatted = result.unwrap();
+    // Should have hanging style pattern
+    assert!(
+        formatted.contains("if n > 0 then"),
+        "Should have 'then' on same line, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_if_style_default_is_indented() {
+    let input = r#"module Main exposing (abs)
+
+
+abs n =
+    if n < 0 then -n else n
+"#;
+    let result = format_elm(input);
+    assert!(result.is_ok(), "Should format with default if-style");
+    let formatted = result.unwrap();
+    // Default should be indented style
+    assert!(
+        formatted.contains("if n < 0\n    then"),
+        "Default if-style should be indented, got:\n{}",
         formatted
     );
 }
