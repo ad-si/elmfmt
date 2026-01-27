@@ -80,7 +80,7 @@
     (type_annotation)
     (port_annotation)
   ]
-  (#delimiter! "\n\n")
+  (#delimiter! "__DECL_DELIMITER__")
 )
 
 ; ==============================================================================
@@ -175,7 +175,7 @@
     (type_alias_declaration)
     (port_annotation)
   ]
-  (#delimiter! "\n\n")
+  (#delimiter! "__DECL_DELIMITER__")
 )
 
 ; Blank line after type alias when followed by other declarations
@@ -189,7 +189,7 @@
     (type_alias_declaration)
     (port_annotation)
   ]
-  (#delimiter! "\n\n")
+  (#delimiter! "__DECL_DELIMITER__")
 )
 
 ; ==============================================================================
@@ -270,7 +270,7 @@
     (line_comment)
     (block_comment)
   ]
-  (#delimiter! "\n\n")
+  (#delimiter! "__DECL_DELIMITER__")
 )
 
 ; function name arg1 arg2 =
@@ -645,7 +645,7 @@
     (type_alias_declaration)
     (port_annotation)
   ]
-  (#delimiter! "\n\n")
+  (#delimiter! "__DECL_DELIMITER__")
 )
 
 ; ==============================================================================

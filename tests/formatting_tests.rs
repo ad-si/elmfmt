@@ -14,12 +14,17 @@ pub enum IfStyle {
     Hanging,
 }
 
-fn build_query(if_style: IfStyle) -> String {
+fn build_query(if_style: IfStyle, newlines_between_decls: u8) -> String {
     let if_query = match if_style {
         IfStyle::Hanging => IF_HANGING_QUERY,
         IfStyle::Indented => IF_INDENTED_QUERY,
     };
-    format!("{}\n\n{}", ELM_QUERY_BASE, if_query)
+    let base_query = format!("{}\n\n{}", ELM_QUERY_BASE, if_query);
+
+    // Replace the placeholder with the configured delimiter for declaration spacing
+    // The config value represents blank lines, so we add 1 for the line-ending newline.
+    let decl_delimiter = "\\n".repeat((newlines_between_decls + 1) as usize);
+    base_query.replace("__DECL_DELIMITER__", &decl_delimiter)
 }
 
 fn format_elm(input: &str) -> Result<String> {
@@ -34,9 +39,22 @@ fn format_elm_with_if_style(input: &str, if_style: IfStyle) -> Result<String> {
     format_elm_with_options(input, "  ", if_style)
 }
 
+fn format_elm_with_newlines(input: &str, newlines_between_decls: u8) -> Result<String> {
+    format_elm_full(input, "  ", IfStyle::default(), newlines_between_decls)
+}
+
 fn format_elm_with_options(input: &str, indent: &str, if_style: IfStyle) -> Result<String> {
+    format_elm_full(input, indent, if_style, 2)
+}
+
+fn format_elm_full(
+    input: &str,
+    indent: &str,
+    if_style: IfStyle,
+    newlines_between_decls: u8,
+) -> Result<String> {
     let grammar = tree_sitter_elm::LANGUAGE;
-    let query_str = build_query(if_style);
+    let query_str = build_query(if_style, newlines_between_decls);
     let query = TopiaryQuery::new(&grammar.into(), &query_str)
         .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
 
@@ -598,6 +616,61 @@ abs n =
     assert!(
         formatted.contains("if n < 0\n    then"),
         "Default if-style should be indented, got:\n{}",
+        formatted
+    );
+}
+
+// ============================================================================
+// Newlines Between Declarations Tests
+// ============================================================================
+
+#[test]
+fn test_newlines_between_decls_default() {
+    let input = r#"module Main exposing (foo, bar)
+foo = 1
+bar = 2
+"#;
+    let result = format_elm(input);
+    assert!(result.is_ok(), "Should format with default newlines");
+    let formatted = result.unwrap();
+    // Default is 2 blank lines between declarations
+    assert!(
+        formatted.contains("foo = 1\n\n\nbar = 2"),
+        "Default should have 2 blank lines between declarations, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_newlines_between_decls_one() {
+    let input = r#"module Main exposing (foo, bar)
+foo = 1
+bar = 2
+"#;
+    let result = format_elm_with_newlines(input, 1);
+    assert!(result.is_ok(), "Should format with 1 blank line");
+    let formatted = result.unwrap();
+    // 1 blank line between declarations
+    assert!(
+        formatted.contains("foo = 1\n\nbar = 2"),
+        "Should have 1 blank line between declarations, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_newlines_between_decls_zero() {
+    let input = r#"module Main exposing (foo, bar)
+foo = 1
+bar = 2
+"#;
+    let result = format_elm_with_newlines(input, 0);
+    assert!(result.is_ok(), "Should format with 0 blank lines");
+    let formatted = result.unwrap();
+    // 0 blank lines means declarations are directly adjacent
+    assert!(
+        formatted.contains("foo = 1\nbar = 2"),
+        "Should have 0 blank lines between declarations, got:\n{}",
         formatted
     );
 }

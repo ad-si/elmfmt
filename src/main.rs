@@ -35,6 +35,9 @@ pub enum IfStyle {
     Hanging,
 }
 
+/// Default number of newlines between top-level declarations
+const DEFAULT_NEWLINES_BETWEEN_DECLS: u8 = 2;
+
 /// Configuration for elmfmt
 #[derive(Debug, Deserialize, Default)]
 #[serde(default)]
@@ -44,6 +47,9 @@ struct Config {
     /// Style for if-then-else expressions
     #[serde(rename = "if-style")]
     if_style: IfStyle,
+    /// Number of newlines between top-level declarations (default: 2)
+    #[serde(rename = "newlines-between-decls")]
+    newlines_between_decls: Option<u8>,
 }
 
 impl Config {
@@ -83,6 +89,15 @@ impl Config {
         let spaces = self.indentation.unwrap_or(DEFAULT_INDENT_SPACES);
         " ".repeat(spaces as usize)
     }
+
+    /// Get the delimiter string for newlines between declarations (escaped for query syntax)
+    /// The config value represents blank lines, so we add 1 for the line-ending newline.
+    fn decl_delimiter(&self) -> String {
+        let blank_lines = self
+            .newlines_between_decls
+            .unwrap_or(DEFAULT_NEWLINES_BETWEEN_DECLS);
+        "\\n".repeat((blank_lines + 1) as usize)
+    }
 }
 
 /// A formatter for Elm code, powered by Topiary
@@ -120,12 +135,16 @@ const IF_HANGING_QUERY: &str = include_str!("../queries/if_hanging.scm");
 /// The indented style if-expression query
 const IF_INDENTED_QUERY: &str = include_str!("../queries/if_indented.scm");
 
-fn build_query(if_style: IfStyle) -> String {
-    let if_query = match if_style {
+fn build_query(config: &Config) -> String {
+    let if_query = match config.if_style {
         IfStyle::Hanging => IF_HANGING_QUERY,
         IfStyle::Indented => IF_INDENTED_QUERY,
     };
-    format!("{}\n\n{}", ELM_QUERY_BASE, if_query)
+    let base_query = format!("{}\n\n{}", ELM_QUERY_BASE, if_query);
+
+    // Replace the placeholder with the configured delimiter for declaration spacing
+    let decl_delimiter = config.decl_delimiter();
+    base_query.replace("__DECL_DELIMITER__", &decl_delimiter)
 }
 
 /// Find all .elm files in a directory recursively
@@ -190,7 +209,7 @@ fn main() -> Result<()> {
 
             // Set up the language configuration
             let grammar = tree_sitter_elm::LANGUAGE;
-            let query_str = build_query(config.if_style);
+            let query_str = build_query(&config);
             let query = TopiaryQuery::new(&grammar.into(), &query_str)
                 .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
             let language = Language {
@@ -240,7 +259,7 @@ fn main() -> Result<()> {
 
         // Set up the language configuration
         let grammar = tree_sitter_elm::LANGUAGE;
-        let query_str = build_query(config.if_style);
+        let query_str = build_query(&config);
         let query = TopiaryQuery::new(&grammar.into(), &query_str)
             .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
         let language = Language {

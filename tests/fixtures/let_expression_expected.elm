@@ -7,13 +7,16 @@ compute x =
   in
   z + 3
 
+
 tuplePattern =
   let
     (a, b) = ( 1, 2 )
   in
   a + b
 
+
 nextDeclaration = 42
+
 
 -- Test case: blank line between let bindings should be preserved
 multipleLetBindings =
