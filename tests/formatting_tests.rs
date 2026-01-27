@@ -102,6 +102,11 @@ fn test_imports_formatting() {
     run_fixture_test("imports");
 }
 
+#[test]
+fn test_blank_lines_formatting() {
+    run_fixture_test("blank_lines");
+}
+
 // ============================================================================
 // Type Tests
 // ============================================================================

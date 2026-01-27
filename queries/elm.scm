@@ -14,16 +14,11 @@
 ] @leaf
 
 ; ==============================================================================
-; Comments - preserve blank lines before comments
+; Comments
 ; ==============================================================================
 
-[
-  (line_comment)
-  (block_comment)
-] @allow_blank_line_before
-
-(line_comment) @prepend_input_softline @append_hardline
-(block_comment) @prepend_input_softline @append_hardline
+(line_comment) @append_hardline
+(block_comment) @append_hardline
 
 ; ==============================================================================
 ; Module declaration
@@ -40,9 +35,10 @@
   (port) @append_space
 )
 
-; Add newlines after module declaration
+; Add blank line after module declaration
 (file
-  (module_declaration) @append_hardline @append_hardline
+  (module_declaration) @append_delimiter
+  (#delimiter! "\n\n")
 )
 
 ; ==============================================================================
@@ -75,7 +71,7 @@
 
 ; Blank line after all imports before declarations
 (
-  (import_clause) @append_hardline
+  (import_clause) @append_delimiter
   .
   [
     (value_declaration)
@@ -84,6 +80,7 @@
     (type_annotation)
     (port_annotation)
   ]
+  (#delimiter! "\n\n")
 )
 
 ; ==============================================================================
@@ -107,12 +104,6 @@
 ; ==============================================================================
 ; Type declarations
 ; ==============================================================================
-
-; Allow blank lines before type declarations
-[
-  (type_declaration)
-  (type_alias_declaration)
-] @allow_blank_line_before
 
 ; type Msg = ...
 (type_declaration
@@ -169,9 +160,9 @@
   .
 )
 
-; Blank line after type alias when followed by other declarations
+; Blank line after type declaration when followed by other declarations
 (
-  (type_alias_declaration) @append_hardline
+  (type_declaration) @append_delimiter
   .
   [
     (value_declaration)
@@ -180,6 +171,21 @@
     (type_alias_declaration)
     (port_annotation)
   ]
+  (#delimiter! "\n\n")
+)
+
+; Blank line after type alias when followed by other declarations
+(
+  (type_alias_declaration) @append_delimiter
+  .
+  [
+    (value_declaration)
+    (type_annotation)
+    (type_declaration)
+    (type_alias_declaration)
+    (port_annotation)
+  ]
+  (#delimiter! "\n\n")
 )
 
 ; ==============================================================================
@@ -247,18 +253,9 @@
 ; Value/function declarations
 ; ==============================================================================
 
-; Allow blank lines between declarations
-[
-  (value_declaration)
-  (type_annotation)
-  (port_annotation)
-] @allow_blank_line_before
-
-; Blank line between value declarations
-; The @allow_blank_line_before on value_declaration preserves blank lines from input
-; This rule adds a single hardline; blank lines are preserved via @allow_blank_line_before
-(
-  (value_declaration) @append_hardline
+; Blank line between top-level value declarations (not in let expressions)
+(file
+  (value_declaration) @append_delimiter
   .
   [
     (value_declaration)
@@ -267,6 +264,7 @@
     (type_alias_declaration)
     (port_annotation)
   ]
+  (#delimiter! "\n\n")
 )
 
 ; function name arg1 arg2 =
@@ -597,7 +595,7 @@
 
 ; Blank line after port annotation
 (
-  (port_annotation) @append_hardline
+  (port_annotation) @append_delimiter
   .
   [
     (value_declaration)
@@ -606,6 +604,7 @@
     (type_alias_declaration)
     (port_annotation)
   ]
+  (#delimiter! "\n\n")
 )
 
 ; ==============================================================================
