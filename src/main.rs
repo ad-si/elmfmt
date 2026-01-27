@@ -1,9 +1,63 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
+use serde::Deserialize;
 use std::fs;
 use std::io::{self, Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use topiary_core::{formatter, Language, Operation, TopiaryQuery};
+
+/// Configuration file name
+const CONFIG_FILE_NAME: &str = "elmfmt.yaml";
+
+/// Default number of spaces for indentation
+const DEFAULT_INDENT_SPACES: u8 = 2;
+
+/// Configuration for elmfmt
+#[derive(Debug, Deserialize, Default)]
+#[serde(default)]
+struct Config {
+    /// Number of spaces to use for indentation
+    indentation: Option<u8>,
+}
+
+impl Config {
+    /// Load configuration from elmfmt.yaml, searching from the given directory upward
+    fn load(start_dir: Option<&Path>) -> Result<Self> {
+        let start = start_dir
+            .map(|p| p.to_path_buf())
+            .or_else(|| std::env::current_dir().ok())
+            .unwrap_or_else(|| PathBuf::from("."));
+
+        // Search for config file from start directory up to root
+        let mut current = start.as_path();
+        loop {
+            let config_path = current.join(CONFIG_FILE_NAME);
+            if config_path.exists() {
+                let content = fs::read_to_string(&config_path).with_context(|| {
+                    format!("Failed to read config file: {}", config_path.display())
+                })?;
+                let config: Config = serde_yaml::from_str(&content).with_context(|| {
+                    format!("Failed to parse config file: {}", config_path.display())
+                })?;
+                return Ok(config);
+            }
+
+            match current.parent() {
+                Some(parent) => current = parent,
+                None => break,
+            }
+        }
+
+        // No config file found, use defaults
+        Ok(Config::default())
+    }
+
+    /// Get the indentation string based on configuration
+    fn indent_string(&self) -> String {
+        let spaces = self.indentation.unwrap_or(DEFAULT_INDENT_SPACES);
+        " ".repeat(spaces as usize)
+    }
+}
 
 /// A formatter for Elm code, powered by Topiary
 #[derive(Parser, Debug)]
@@ -37,6 +91,10 @@ const ELM_QUERY: &str = include_str!("../queries/elm.scm");
 fn main() -> Result<()> {
     let args = Args::parse();
 
+    // Load configuration (search from input file's directory or current directory)
+    let config_search_dir = args.input.as_ref().and_then(|p| p.parent());
+    let config = Config::load(config_search_dir)?;
+
     // Read input
     let input_content = if let Some(ref path) = args.input {
         fs::read_to_string(path)
@@ -61,7 +119,7 @@ fn main() -> Result<()> {
         name: "elm".to_string(),
         query,
         grammar: grammar.into(),
-        indent: Some("    ".to_string()), // Elm uses 4-space indentation
+        indent: Some(config.indent_string()),
     };
 
     // Create the formatting operation

@@ -10,3 +10,5 @@ topiary-core = "0.6"
 tree-sitter-elm = "5"
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"

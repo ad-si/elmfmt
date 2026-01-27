@@ -6,6 +6,10 @@ use topiary_core::{formatter, Language, Operation, TopiaryQuery};
 const ELM_QUERY: &str = include_str!("../queries/elm.scm");
 
 fn format_elm(input: &str) -> Result<String> {
+    format_elm_with_indent(input, "  ")
+}
+
+fn format_elm_with_indent(input: &str, indent: &str) -> Result<String> {
     let grammar = tree_sitter_elm::LANGUAGE;
     let query = TopiaryQuery::new(&grammar.into(), ELM_QUERY)
         .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
@@ -14,7 +18,7 @@ fn format_elm(input: &str) -> Result<String> {
         name: "elm".to_string(),
         query,
         grammar: grammar.into(),
-        indent: Some("    ".to_string()),
+        indent: Some(indent.to_string()),
     };
 
     let operation = Operation::Format {
@@ -185,8 +189,8 @@ fn test_formatting_is_idempotent() {
         let expected = fs::read_to_string(&expected_path)
             .unwrap_or_else(|e| panic!("Failed to read {}: {}", expected_path.display(), e));
 
-        let reformatted =
-            format_elm(&expected).unwrap_or_else(|e| panic!("Formatting failed for {}: {}", name, e));
+        let reformatted = format_elm(&expected)
+            .unwrap_or_else(|e| panic!("Formatting failed for {}: {}", name, e));
 
         assert_eq!(
             reformatted, expected,
@@ -228,7 +232,10 @@ nested =
             -1
 "#;
     let result = format_elm(input);
-    assert!(result.is_ok(), "Should handle deeply nested case expressions");
+    assert!(
+        result.is_ok(),
+        "Should handle deeply nested case expressions"
+    );
 }
 
 #[test]
@@ -243,7 +250,10 @@ view model =
         ]
 "#;
     let result = format_elm(input);
-    assert!(result.is_ok(), "Should handle long function calls with multiple arguments");
+    assert!(
+        result.is_ok(),
+        "Should handle long function calls with multiple arguments"
+    );
 }
 
 #[test]
@@ -263,7 +273,8 @@ text =
 
 #[test]
 fn test_qualified_names() {
-    let input = "module Main exposing (main)\n\n\nmain =\n    Html.div [] [ Html.text \"hello\" ]\n";
+    let input =
+        "module Main exposing (main)\n\n\nmain =\n    Html.div [] [ Html.text \"hello\" ]\n";
     let result = format_elm(input);
     assert!(result.is_ok(), "Should handle qualified names");
     let formatted = result.unwrap();
@@ -301,7 +312,10 @@ first ( a, b ) =
     a
 "#;
     let result = format_elm(input);
-    assert!(result.is_ok(), "Should handle pattern matching in function arguments");
+    assert!(
+        result.is_ok(),
+        "Should handle pattern matching in function arguments"
+    );
 }
 
 // ============================================================================
@@ -310,7 +324,71 @@ first ( a, b ) =
 
 #[test]
 fn test_invalid_syntax_fails() {
-    let input = "module Main exposing (";  // Invalid - unclosed parenthesis
+    let input = "module Main exposing ("; // Invalid - unclosed parenthesis
     let result = format_elm(input);
     assert!(result.is_err(), "Should fail on invalid syntax");
+}
+
+// ============================================================================
+// Configuration Tests
+// ============================================================================
+
+#[test]
+fn test_custom_indent_2_spaces() {
+    let input = r#"module Main exposing (msg)
+
+
+type Msg
+    = Click
+    | Hover
+"#;
+    let result = format_elm_with_indent(input, "  ");
+    assert!(result.is_ok(), "Should format with 2-space indent");
+    let formatted = result.unwrap();
+    // Type variants are indented under the type declaration
+    assert!(
+        formatted.contains("\n  Click"),
+        "Should use 2-space indent for type variants, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_custom_indent_8_spaces() {
+    let input = r#"module Main exposing (msg)
+
+
+type Msg
+    = Click
+    | Hover
+"#;
+    let result = format_elm_with_indent(input, "        ");
+    assert!(result.is_ok(), "Should format with 8-space indent");
+    let formatted = result.unwrap();
+    // Type variants are indented under the type declaration
+    assert!(
+        formatted.contains("\n        Click"),
+        "Should use 8-space indent for type variants, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_default_indent_2_spaces() {
+    let input = r#"module Main exposing (msg)
+
+
+type Msg
+    = Click
+    | Hover
+"#;
+    let result = format_elm(input);
+    assert!(result.is_ok(), "Should format with default 2-space indent");
+    let formatted = result.unwrap();
+    // Type variants are indented under the type declaration
+    assert!(
+        formatted.contains("\n  Click"),
+        "Should use 2-space indent for type variants, got:\n{}",
+        formatted
+    );
 }

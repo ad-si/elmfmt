@@ -4,5 +4,5 @@ module Main exposing (main)
 {- This is a block comment -}
 
 main =
-    -- inline comment
-    text "hello"
+  -- inline comment
+  text "hello"
