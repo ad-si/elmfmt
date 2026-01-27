@@ -442,9 +442,9 @@ type Msg
     let result = format_elm_with_indent(input, "  ");
     assert!(result.is_ok(), "Should format with 2-space indent");
     let formatted = result.unwrap();
-    // Type variants are indented under the type declaration
+    // Type variants are indented under the type declaration, with = on same line as first variant
     assert!(
-        formatted.contains("\n  Click"),
+        formatted.contains("\n  = Click"),
         "Should use 2-space indent for type variants, got:\n{}",
         formatted
     );
@@ -462,9 +462,9 @@ type Msg
     let result = format_elm_with_indent(input, "        ");
     assert!(result.is_ok(), "Should format with 8-space indent");
     let formatted = result.unwrap();
-    // Type variants are indented under the type declaration
+    // Type variants are indented under the type declaration, with = on same line as first variant
     assert!(
-        formatted.contains("\n        Click"),
+        formatted.contains("\n        = Click"),
         "Should use 8-space indent for type variants, got:\n{}",
         formatted
     );
@@ -482,9 +482,9 @@ type Msg
     let result = format_elm(input);
     assert!(result.is_ok(), "Should format with default 2-space indent");
     let formatted = result.unwrap();
-    // Type variants are indented under the type declaration
+    // Type variants are indented under the type declaration, with = on same line as first variant
     assert!(
-        formatted.contains("\n  Click"),
+        formatted.contains("\n  = Click"),
         "Should use 2-space indent for type variants, got:\n{}",
         formatted
     );

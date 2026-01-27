@@ -112,8 +112,12 @@
 )
 
 ; Indent union variants - use (eq) since = is a named node
+; In multiline types, the = goes on a new line before the first variant:
+;   type ChartEvent
+;     = RenderPerRepoChart Int Int
+;     | RenderPerUserChart Int Int
 (type_declaration
-  (eq) @append_spaced_softline @append_indent_start
+  (eq) @prepend_spaced_softline @prepend_indent_start @append_space
 )
 
 (type_declaration
@@ -473,12 +477,16 @@
 ; ==============================================================================
 
 ; { field = value }
+; elm-format style uses leading commas:
+;   { name = "Bob"
+;   , age = 25
+;   }
 (record_expr
-  "{" @append_spaced_softline @append_indent_start
-  "}" @prepend_spaced_softline @prepend_indent_end
+  "{" @append_space
+  "}" @prepend_spaced_softline
 )
 
-; Empty record {} - remove the spaced softline for empty records
+; Empty record {} - no spacing inside
 (record_expr
   "{" @append_antispace
   .
@@ -490,8 +498,9 @@
   "}" @prepend_antispace
 )
 
+; Leading comma style: newline before comma, space after
 (record_expr
-  "," @append_space
+  "," @prepend_empty_softline @append_space
 )
 
 ; Record update: { model | field = value }
