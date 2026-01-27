@@ -5,6 +5,7 @@ use std::fs;
 use std::io::{self, Read, Write};
 use std::path::{Path, PathBuf};
 use topiary_core::{formatter, Language, Operation, TopiaryQuery};
+use walkdir::WalkDir;
 
 /// Configuration file name
 const CONFIG_FILE_NAME: &str = "elmfmt.yaml";
@@ -127,82 +128,155 @@ fn build_query(if_style: IfStyle) -> String {
     format!("{}\n\n{}", ELM_QUERY_BASE, if_query)
 }
 
-fn main() -> Result<()> {
-    let args = Args::parse();
+/// Find all .elm files in a directory recursively
+fn find_elm_files(dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    for entry in WalkDir::new(dir).follow_links(true) {
+        let entry =
+            entry.with_context(|| format!("Failed to read directory: {}", dir.display()))?;
+        let path = entry.path();
+        if path.is_file() && path.extension().is_some_and(|ext| ext == "elm") {
+            files.push(path.to_path_buf());
+        }
+    }
+    files.sort();
+    Ok(files)
+}
 
-    // Load configuration (search from input file's directory or current directory)
-    let config_search_dir = args.input.as_ref().and_then(|p| p.parent());
-    let config = Config::load(config_search_dir)?;
-
-    // Read input
-    let input_content = if let Some(ref path) = args.input {
-        fs::read_to_string(path)
-            .with_context(|| format!("Failed to read file: {}", path.display()))?
-    } else {
-        let mut buffer = String::new();
-        io::stdin()
-            .read_to_string(&mut buffer)
-            .context("Failed to read from stdin")?;
-        buffer
-    };
-
-    // Get the tree-sitter grammar for Elm
-    let grammar = tree_sitter_elm::LANGUAGE;
-
-    // Build the combined query based on configuration
-    let query_str = build_query(config.if_style);
-
-    // Create the Topiary query
-    let query = TopiaryQuery::new(&grammar.into(), &query_str)
-        .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
-
-    // Create the language configuration
-    let language = Language {
-        name: "elm".to_string(),
-        query,
-        grammar: grammar.into(),
-        indent: Some(config.indent_string()),
-    };
-
-    // Create the formatting operation
+/// Format a single file's content and return the formatted string
+fn format_content(content: &str, language: &Language, skip_idempotence: bool) -> Result<String> {
     let operation = Operation::Format {
-        skip_idempotence: args.skip_idempotence,
+        skip_idempotence,
         tolerate_parsing_errors: false,
     };
 
-    // Format the code
-    let mut input = input_content.as_bytes();
+    let mut input = content.as_bytes();
     let mut output = Vec::new();
 
-    formatter(&mut input, &mut output, &language, operation)
+    formatter(&mut input, &mut output, language, operation)
         .map_err(|e| anyhow!("Failed to format Elm code: {:?}", e))?;
 
-    let formatted = String::from_utf8(output).context("Formatter produced invalid UTF-8")?;
+    String::from_utf8(output).context("Formatter produced invalid UTF-8")
+}
 
-    // Handle check mode
-    if args.check {
-        if formatted != input_content {
-            eprintln!("File would be reformatted");
+fn main() -> Result<()> {
+    let args = Args::parse();
+
+    // Check if input is a directory
+    let is_directory = args.input.as_ref().is_some_and(|p| p.is_dir());
+
+    if is_directory {
+        // Directory mode: format all .elm files recursively
+        let dir = args.input.as_ref().unwrap();
+
+        if args.output.is_some() {
+            anyhow::bail!("Cannot use --output with a directory input");
+        }
+        if !args.in_place && !args.check {
+            anyhow::bail!("When formatting a directory, you must use --in-place or --check");
+        }
+
+        let files = find_elm_files(dir)?;
+        if files.is_empty() {
+            eprintln!("No .elm files found in {}", dir.display());
+            return Ok(());
+        }
+
+        let mut needs_formatting = false;
+
+        for file in &files {
+            // Load configuration for each file (may differ by directory)
+            let config = Config::load(file.parent())?;
+
+            // Set up the language configuration
+            let grammar = tree_sitter_elm::LANGUAGE;
+            let query_str = build_query(config.if_style);
+            let query = TopiaryQuery::new(&grammar.into(), &query_str)
+                .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
+            let language = Language {
+                name: "elm".to_string(),
+                query,
+                grammar: grammar.into(),
+                indent: Some(config.indent_string()),
+            };
+
+            let content = fs::read_to_string(file)
+                .with_context(|| format!("Failed to read file: {}", file.display()))?;
+
+            let formatted = format_content(&content, &language, args.skip_idempotence)
+                .with_context(|| format!("Failed to format: {}", file.display()))?;
+
+            if args.check {
+                if formatted != content {
+                    eprintln!("Would reformat: {}", file.display());
+                    needs_formatting = true;
+                }
+            } else if args.in_place && formatted != content {
+                fs::write(file, &formatted)
+                    .with_context(|| format!("Failed to write file: {}", file.display()))?;
+                eprintln!("Formatted: {}", file.display());
+            }
+        }
+
+        if args.check && needs_formatting {
             std::process::exit(1);
         }
-        return Ok(());
-    }
+    } else {
+        // Single file or stdin mode
+        let config_search_dir = args.input.as_ref().and_then(|p| p.parent());
+        let config = Config::load(config_search_dir)?;
 
-    // Write output
-    if args.in_place {
-        if let Some(ref path) = args.input {
+        // Read input
+        let input_content = if let Some(ref path) = args.input {
+            fs::read_to_string(path)
+                .with_context(|| format!("Failed to read file: {}", path.display()))?
+        } else {
+            let mut buffer = String::new();
+            io::stdin()
+                .read_to_string(&mut buffer)
+                .context("Failed to read from stdin")?;
+            buffer
+        };
+
+        // Set up the language configuration
+        let grammar = tree_sitter_elm::LANGUAGE;
+        let query_str = build_query(config.if_style);
+        let query = TopiaryQuery::new(&grammar.into(), &query_str)
+            .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
+        let language = Language {
+            name: "elm".to_string(),
+            query,
+            grammar: grammar.into(),
+            indent: Some(config.indent_string()),
+        };
+
+        let formatted = format_content(&input_content, &language, args.skip_idempotence)?;
+
+        // Handle check mode
+        if args.check {
+            if formatted != input_content {
+                eprintln!("File would be reformatted");
+                std::process::exit(1);
+            }
+            return Ok(());
+        }
+
+        // Write output
+        if args.in_place {
+            if let Some(ref path) = args.input {
+                fs::write(path, &formatted)
+                    .with_context(|| format!("Failed to write file: {}", path.display()))?;
+            } else {
+                anyhow::bail!("Cannot use --in-place without an input file");
+            }
+        } else if let Some(ref path) = args.output {
             fs::write(path, &formatted)
                 .with_context(|| format!("Failed to write file: {}", path.display()))?;
         } else {
-            anyhow::bail!("Cannot use --in-place without an input file");
+            io::stdout()
+                .write_all(formatted.as_bytes())
+                .context("Failed to write to stdout")?;
         }
-    } else if let Some(ref path) = args.output {
-        fs::write(path, &formatted)
-            .with_context(|| format!("Failed to write file: {}", path.display()))?;
-    } else {
-        io::stdout()
-            .write_all(formatted.as_bytes())
-            .context("Failed to write to stdout")?;
     }
 
     Ok(())
