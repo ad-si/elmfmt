@@ -597,15 +597,31 @@
 ; Lists
 ; ==============================================================================
 
-; Lists - softlines for proper multiline handling
+; Lists - elm-format style uses leading commas:
+;   [ first
+;   , second
+;   , third
+;   ]
 (list_expr
-  "[" @append_spaced_softline @append_indent_start
+  "[" @append_space @append_indent_start
   "]" @prepend_spaced_softline @prepend_indent_end
 )
 
-; Commas in lists
+; Empty list [] - no spacing inside
 (list_expr
-  "," @append_spaced_softline
+  "[" @append_antispace
+  .
+  "]"
+)
+(list_expr
+  "["
+  .
+  "]" @prepend_antispace
+)
+
+; Leading comma style: newline before comma, space after
+(list_expr
+  "," @prepend_empty_softline @append_space
 )
 
 ; ==============================================================================
