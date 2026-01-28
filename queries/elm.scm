@@ -488,7 +488,6 @@
 (function_call_expr
   .
   (_) @append_indent_start
-  .
   (_)
 )
 
@@ -603,8 +602,8 @@
 ;   , third
 ;   ]
 (list_expr
-  "[" @append_space @append_indent_start
-  "]" @prepend_spaced_softline @prepend_indent_end
+  "[" @append_space
+  "]" @prepend_spaced_softline
 )
 
 ; Empty list [] - no spacing inside
@@ -628,13 +627,18 @@
 ; Tuples
 ; ==============================================================================
 
+; Tuple formatting - elm-format style with leading commas:
+;   ( first
+;   , second
+;   )
 (tuple_expr
-  "(" @append_spaced_softline @append_indent_start
-  ")" @prepend_spaced_softline @prepend_indent_end
+  "(" @append_space
+  ")" @prepend_spaced_softline
 )
 
+; Leading comma style: newline before comma, space after
 (tuple_expr
-  "," @append_space
+  "," @prepend_empty_softline @append_space
 )
 
 (tuple_type

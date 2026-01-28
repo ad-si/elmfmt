@@ -182,6 +182,11 @@ fn test_list_formatting() {
     run_fixture_test("list");
 }
 
+#[test]
+fn test_tuple_formatting() {
+    run_fixture_test("tuple");
+}
+
 // ============================================================================
 // Operator Tests
 // ============================================================================
