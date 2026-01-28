@@ -205,6 +205,17 @@ fn test_comments_formatting() {
     run_fixture_test("comments");
 }
 
+#[test]
+fn test_if_comment_formatting() {
+    run_fixture_test("if_comment");
+}
+
+#[test]
+#[ignore] // Known issue: let inside else-if branch causes incorrect indentation of subsequent case branches
+fn test_if_nested_let_formatting() {
+    run_fixture_test("if_nested_let");
+}
+
 // ============================================================================
 // Idempotence Tests
 // ============================================================================

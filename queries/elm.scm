@@ -377,6 +377,46 @@
   "in"
 )
 
+; Comments in let expressions: ensure proper newlines
+; value_declaration -> comment
+(let_in_expr
+  (value_declaration) @append_hardline
+  .
+  (line_comment) @allow_blank_line_before
+)
+
+(let_in_expr
+  (value_declaration) @append_hardline
+  .
+  (block_comment) @allow_blank_line_before
+)
+
+; comment -> value_declaration
+(let_in_expr
+  (line_comment)
+  .
+  (value_declaration)
+)
+
+(let_in_expr
+  (block_comment)
+  .
+  (value_declaration)
+)
+
+; comment -> "in" (comment at end of let bindings, before in)
+(let_in_expr
+  (line_comment) @append_hardline
+  .
+  "in"
+)
+
+(let_in_expr
+  (block_comment) @append_hardline
+  .
+  "in"
+)
+
 ; ==============================================================================
 ; Case expressions
 ; ==============================================================================
@@ -526,6 +566,19 @@
   (eq) @prepend_space @append_space
 )
 
+; Comments inside records: ensure newline before comments that follow fields
+(record_expr
+  (field)
+  .
+  (line_comment) @prepend_hardline
+)
+
+(record_expr
+  (field)
+  .
+  (block_comment) @prepend_hardline
+)
+
 ; Record types
 (record_type
   "{" @append_spaced_softline @append_indent_start
@@ -668,6 +721,8 @@
     (type_declaration)
     (type_alias_declaration)
     (port_annotation)
+    (line_comment)
+    (block_comment)
   ]
   (#delimiter! "__DECL_DELIMITER__")
 )
