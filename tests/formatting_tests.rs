@@ -6,6 +6,8 @@ use topiary_core::{formatter, Language, Operation, TopiaryQuery};
 const ELM_QUERY_BASE: &str = include_str!("../queries/elm.scm");
 const IF_HANGING_QUERY: &str = include_str!("../queries/if_hanging.scm");
 const IF_INDENTED_QUERY: &str = include_str!("../queries/if_indented.scm");
+const TUPLE_SPACED_QUERY: &str = include_str!("../queries/tuple_spaced.scm");
+const TUPLE_COMPACT_QUERY: &str = include_str!("../queries/tuple_compact.scm");
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum IfStyle {
@@ -14,12 +16,23 @@ pub enum IfStyle {
     Hanging,
 }
 
-fn build_query(if_style: IfStyle, newlines_between_decls: u8) -> String {
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum TupleStyle {
+    #[default]
+    Compact,
+    Spaced,
+}
+
+fn build_query(if_style: IfStyle, tuple_style: TupleStyle, newlines_between_decls: u8) -> String {
     let if_query = match if_style {
         IfStyle::Hanging => IF_HANGING_QUERY,
         IfStyle::Indented => IF_INDENTED_QUERY,
     };
-    let base_query = format!("{}\n\n{}", ELM_QUERY_BASE, if_query);
+    let tuple_query = match tuple_style {
+        TupleStyle::Spaced => TUPLE_SPACED_QUERY,
+        TupleStyle::Compact => TUPLE_COMPACT_QUERY,
+    };
+    let base_query = format!("{}\n\n{}\n\n{}", ELM_QUERY_BASE, if_query, tuple_query);
 
     // Replace the placeholder with the configured delimiter for declaration spacing
     // The config value represents blank lines, so we add 1 for the line-ending newline.
@@ -28,33 +41,49 @@ fn build_query(if_style: IfStyle, newlines_between_decls: u8) -> String {
 }
 
 fn format_elm(input: &str) -> Result<String> {
-    format_elm_with_options(input, "  ", IfStyle::default())
+    format_elm_with_options(input, "  ", IfStyle::default(), TupleStyle::default())
 }
 
 fn format_elm_with_indent(input: &str, indent: &str) -> Result<String> {
-    format_elm_with_options(input, indent, IfStyle::default())
+    format_elm_with_options(input, indent, IfStyle::default(), TupleStyle::default())
 }
 
 fn format_elm_with_if_style(input: &str, if_style: IfStyle) -> Result<String> {
-    format_elm_with_options(input, "  ", if_style)
+    format_elm_with_options(input, "  ", if_style, TupleStyle::default())
+}
+
+fn format_elm_with_tuple_style(input: &str, tuple_style: TupleStyle) -> Result<String> {
+    format_elm_with_options(input, "  ", IfStyle::default(), tuple_style)
 }
 
 fn format_elm_with_newlines(input: &str, newlines_between_decls: u8) -> Result<String> {
-    format_elm_full(input, "  ", IfStyle::default(), newlines_between_decls)
+    format_elm_full(
+        input,
+        "  ",
+        IfStyle::default(),
+        TupleStyle::default(),
+        newlines_between_decls,
+    )
 }
 
-fn format_elm_with_options(input: &str, indent: &str, if_style: IfStyle) -> Result<String> {
-    format_elm_full(input, indent, if_style, 2)
+fn format_elm_with_options(
+    input: &str,
+    indent: &str,
+    if_style: IfStyle,
+    tuple_style: TupleStyle,
+) -> Result<String> {
+    format_elm_full(input, indent, if_style, tuple_style, 2)
 }
 
 fn format_elm_full(
     input: &str,
     indent: &str,
     if_style: IfStyle,
+    tuple_style: TupleStyle,
     newlines_between_decls: u8,
 ) -> Result<String> {
     let grammar = tree_sitter_elm::LANGUAGE;
-    let query_str = build_query(if_style, newlines_between_decls);
+    let query_str = build_query(if_style, tuple_style, newlines_between_decls);
     let query = TopiaryQuery::new(&grammar.into(), &query_str)
         .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
 
@@ -757,5 +786,131 @@ bar = 2
         formatted.contains("foo = 1\nbar = 2"),
         "Should have 0 blank lines between declarations, got:\n{}",
         formatted
+    );
+}
+
+// ============================================================================
+// Tuple Style Configuration Tests
+// ============================================================================
+
+#[test]
+fn test_tuple_style_spaced() {
+    let input = r#"module Main exposing (pair)
+
+
+pair = (1, 2)
+"#;
+    let result = format_elm_with_tuple_style(input, TupleStyle::Spaced);
+    assert!(result.is_ok(), "Should format with spaced tuple style");
+    let formatted = result.unwrap();
+    assert!(
+        formatted.contains("( 1, 2 )"),
+        "Spaced style should have spaces inside parentheses, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_tuple_style_compact() {
+    let input = r#"module Main exposing (pair)
+
+
+pair = ( 1, 2 )
+"#;
+    let result = format_elm_with_tuple_style(input, TupleStyle::Compact);
+    assert!(result.is_ok(), "Should format with compact tuple style");
+    let formatted = result.unwrap();
+    assert!(
+        formatted.contains("(1, 2)"),
+        "Compact style should have no spaces inside parentheses, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_tuple_style_default_is_compact() {
+    let input = r#"module Main exposing (pair)
+
+
+pair = ( 1, 2 )
+"#;
+    let result = format_elm(input);
+    assert!(result.is_ok(), "Should format with default tuple style");
+    let formatted = result.unwrap();
+    assert!(
+        formatted.contains("(1, 2)"),
+        "Default tuple style should be compact, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_function_call_paren_same_line_as_content() {
+    // When a function call has a parenthesized argument with a pipe expression,
+    // the opening paren should have the first expression on the same line,
+    // not on its own line.
+    // WRONG:
+    //   Cmd.batch
+    //     (
+    //       Dict.toList repoDict
+    //       |> List.map ...
+    //     )
+    // RIGHT:
+    //   Cmd.batch
+    //     (Dict.toList repoDict
+    //       |> List.map ...
+    //     )
+    let input = r#"module Main exposing (loadAuthorDicts)
+
+
+loadAuthorDicts accessToken repoDict =
+    Cmd.batch
+        (
+            Dict.toList repoDict
+                |> List.map (\(repoName, _) -> loadAuthorDictSingle accessToken repoName)
+        )
+"#;
+    let result = format_elm(input);
+    assert!(result.is_ok(), "Should format function call with paren");
+    let formatted = result.unwrap();
+    // The opening paren should have Dict.toList on the same line
+    assert!(
+        formatted.contains("(Dict.toList repoDict"),
+        "Opening paren should have content on same line, got:\n{}",
+        formatted
+    );
+    // Should not have opening paren on its own line
+    assert!(
+        !formatted.contains("(\n"),
+        "Opening paren should not be on its own line, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_tuple_pattern_always_compact() {
+    // Tuple patterns (destructuring) should always be compact regardless of tuple-style setting
+    let input = r#"module Main exposing (first)
+
+
+first ( a, b ) = a
+"#;
+    let result_spaced = format_elm_with_tuple_style(input, TupleStyle::Spaced);
+    let result_compact = format_elm_with_tuple_style(input, TupleStyle::Compact);
+
+    assert!(result_spaced.is_ok() && result_compact.is_ok());
+    let formatted_spaced = result_spaced.unwrap();
+    let formatted_compact = result_compact.unwrap();
+
+    // Both should have compact tuple pattern
+    assert!(
+        formatted_spaced.contains("first (a, b)"),
+        "Tuple pattern should be compact even with spaced style, got:\n{}",
+        formatted_spaced
+    );
+    assert!(
+        formatted_compact.contains("first (a, b)"),
+        "Tuple pattern should be compact with compact style, got:\n{}",
+        formatted_compact
     );
 }

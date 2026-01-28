@@ -627,20 +627,11 @@
 ; Tuples
 ; ==============================================================================
 
-; Tuple formatting - elm-format style with leading commas:
-;   ( first
-;   , second
-;   )
-(tuple_expr
-  "(" @append_space
-  ")" @prepend_spaced_softline
-)
+; NOTE: Tuple expression formatting is handled by separate query files based on
+; the configured tuple-style (spaced or compact). The rules are combined at
+; runtime from queries/tuple_spaced.scm or queries/tuple_compact.scm.
 
-; Leading comma style: newline before comma, space after
-(tuple_expr
-  "," @prepend_empty_softline @append_space
-)
-
+; Tuple types always use compact style (no spaces): (Int, String)
 (tuple_type
   "(" @append_antispace
   ")" @prepend_antispace
@@ -650,37 +641,31 @@
   "," @append_space
 )
 
+; Tuple patterns always use compact style (no spaces): (a, b)
+(tuple_pattern
+  "(" @append_antispace
+  ")" @prepend_antispace
+)
+
 ; ==============================================================================
 ; Parenthesized expressions
 ; ==============================================================================
 
-; Multi-line parenthesized expressions should have proper line breaks
-; Single-line ones should have no extra space: (foo)
-; Skip this rule for parenthesized lambdas (handled below)
+; Multi-line parenthesized expressions: content starts on same line as (
+; Closing ) goes on its own line when multi-line
+; elm-format style:
+;   (Dict.toList repoDict
+;     |> List.map ...
+;   )
 (parenthesized_expr
-  "(" @append_empty_softline @append_indent_start
-  .
-  (anonymous_function_expr)? @do_nothing
+  "(" @append_indent_start
   ")" @prepend_empty_softline @prepend_indent_end
 )
 
-; For single-line parenthesized expressions, remove the softline space
-(parenthesized_expr
-  "(" @append_antispace
-  (#single_line_only!)
-)
+; For single-line parenthesized expressions, no extra space: (foo)
 (parenthesized_expr
   ")" @prepend_antispace
   (#single_line_only!)
-)
-
-; Parenthesized lambda: lambda starts on same line as (
-; (\x -> body) - the lambda starts immediately after ( with no newline
-(parenthesized_expr
-  "(" @append_indent_start
-  .
-  (anonymous_function_expr)
-  ")" @prepend_empty_softline @prepend_indent_end
 )
 
 ; ==============================================================================

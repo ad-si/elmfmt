@@ -35,6 +35,23 @@ pub enum IfStyle {
     Hanging,
 }
 
+/// Style for tuple expressions
+#[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum TupleStyle {
+    /// Compact style (default, no spaces inside parentheses):
+    /// ```elm
+    /// (a, b)
+    /// ```
+    #[default]
+    Compact,
+    /// Spaced style (elm-format compatible):
+    /// ```elm
+    /// ( a, b )
+    /// ```
+    Spaced,
+}
+
 /// Default number of newlines between top-level declarations
 const DEFAULT_NEWLINES_BETWEEN_DECLS: u8 = 2;
 
@@ -47,6 +64,9 @@ struct Config {
     /// Style for if-then-else expressions
     #[serde(rename = "if-style")]
     if_style: IfStyle,
+    /// Style for tuple expressions
+    #[serde(rename = "tuple-style")]
+    tuple_style: TupleStyle,
     /// Number of newlines between top-level declarations (default: 2)
     #[serde(rename = "newlines-between-decls")]
     newlines_between_decls: Option<u8>,
@@ -135,12 +155,22 @@ const IF_HANGING_QUERY: &str = include_str!("../queries/if_hanging.scm");
 /// The indented style if-expression query
 const IF_INDENTED_QUERY: &str = include_str!("../queries/if_indented.scm");
 
+/// The spaced tuple style query
+const TUPLE_SPACED_QUERY: &str = include_str!("../queries/tuple_spaced.scm");
+
+/// The compact tuple style query
+const TUPLE_COMPACT_QUERY: &str = include_str!("../queries/tuple_compact.scm");
+
 fn build_query(config: &Config) -> String {
     let if_query = match config.if_style {
         IfStyle::Hanging => IF_HANGING_QUERY,
         IfStyle::Indented => IF_INDENTED_QUERY,
     };
-    let base_query = format!("{}\n\n{}", ELM_QUERY_BASE, if_query);
+    let tuple_query = match config.tuple_style {
+        TupleStyle::Spaced => TUPLE_SPACED_QUERY,
+        TupleStyle::Compact => TUPLE_COMPACT_QUERY,
+    };
+    let base_query = format!("{}\n\n{}\n\n{}", ELM_QUERY_BASE, if_query, tuple_query);
 
     // Replace the placeholder with the configured delimiter for declaration spacing
     let decl_delimiter = config.decl_delimiter();
