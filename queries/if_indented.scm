@@ -36,36 +36,32 @@
   (let_in_expr)
 )
 
-; Close indent from then-let before any else that follows a let_in_expr
+; Close indent from then-let before any else that immediately follows a let_in_expr
 (if_else_expr
-  "then"
-  .
   (let_in_expr)
+  .
   "else" @prepend_indent_end
 )
 
 ; Same but with comments between let and else
 (if_else_expr
-  "then"
-  .
   (let_in_expr)
+  .
   (line_comment)
   "else" @prepend_indent_end
 )
 
 (if_else_expr
-  "then"
-  .
   (let_in_expr)
+  .
   (line_comment)
   (line_comment)
   "else" @prepend_indent_end
 )
 
 (if_else_expr
-  "then"
-  .
   (let_in_expr)
+  .
   (line_comment)
   (line_comment)
   (line_comment)
