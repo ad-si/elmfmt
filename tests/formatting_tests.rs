@@ -433,6 +433,76 @@ handle response =
     );
 }
 
+#[test]
+fn test_let_in_if_then_branch_indented() {
+    // let...in inside if...then should be properly indented
+    let input = r#"module Main exposing (test)
+
+
+test =
+    if condition then
+        let
+            x = 1
+        in
+        x
+    else
+        0
+"#;
+    let result = format_elm_with_if_style(input, IfStyle::Indented);
+    assert!(result.is_ok(), "Should format let-in inside if-then");
+    let formatted = result.unwrap();
+    // In indented style, let should be on its own line under then
+    assert!(
+        formatted.contains("then\n      let"),
+        "let should be on its own line under then, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_multiline_record_update() {
+    // Multi-line record updates should have the base on its own line
+    let input = r#"module Main exposing (test)
+
+
+test = { baseConfig
+    | privateRepos = True, repoChart = RepoChart 365 100
+    }
+"#;
+    let result = format_elm(input);
+    assert!(result.is_ok(), "Should format multiline record update");
+    let formatted = result.unwrap();
+    // Base identifier on first line, fields indented with leading comma style
+    assert!(
+        formatted.contains("{ baseConfig\n    | privateRepos = True\n    , repoChart"),
+        "Record update should have base on first line with fields indented, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_lambda_in_parentheses_same_line() {
+    // Lambda inside parentheses should start on same line as (
+    let input = r#"module Main exposing (test)
+
+
+test =
+    foo
+        (
+            \x -> doSomething x
+        )
+"#;
+    let result = format_elm(input);
+    assert!(result.is_ok(), "Should format lambda in parentheses");
+    let formatted = result.unwrap();
+    // Lambda should start on same line as opening paren
+    assert!(
+        formatted.contains("(\\x -> doSomething x"),
+        "Lambda should start on same line as opening paren, got:\n{}",
+        formatted
+    );
+}
+
 // ============================================================================
 // Error Handling Tests
 // ============================================================================

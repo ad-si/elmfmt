@@ -429,6 +429,7 @@
   (arrow) @append_space
 )
 
+
 ; ==============================================================================
 ; Function calls
 ; ==============================================================================
@@ -503,10 +504,21 @@
   "," @prepend_empty_softline @append_space
 )
 
-; Record update: { model | field = value }
+; Record update: { baseConfig | field = value }
+; Multi-line format:
+;   { baseConfig
+;       | field1 = value1
+;       , field2 = value2
+;   }
 (record_expr
-  (record_base_identifier) @append_space
-  "|" @append_spaced_softline
+  (record_base_identifier) @append_spaced_softline @append_indent_start
+  "|" @append_space
+)
+
+; End indent before } in record updates
+(record_expr
+  (record_base_identifier)
+  "}" @prepend_indent_end
 )
 
 ; Field assignment - (eq) is a named node
@@ -571,8 +583,11 @@
 
 ; Multi-line parenthesized expressions should have proper line breaks
 ; Single-line ones should have no extra space: (foo)
+; Skip this rule for parenthesized lambdas (handled below)
 (parenthesized_expr
   "(" @append_empty_softline @append_indent_start
+  .
+  (anonymous_function_expr)? @do_nothing
   ")" @prepend_empty_softline @prepend_indent_end
 )
 
@@ -584,6 +599,15 @@
 (parenthesized_expr
   ")" @prepend_antispace
   (#single_line_only!)
+)
+
+; Parenthesized lambda: lambda starts on same line as (
+; (\x -> body) - the lambda starts immediately after ( with no newline
+(parenthesized_expr
+  "(" @append_indent_start
+  .
+  (anonymous_function_expr)
+  ")" @prepend_empty_softline @prepend_indent_end
 )
 
 ; ==============================================================================
