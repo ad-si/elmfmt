@@ -763,6 +763,24 @@
   ) @append_indent_end ; close the extra indent
 )
 
+; Backpipe expressions in lists get extra indentation for continuations
+; so that the right side is double-indented:
+;   [ fromUnstyled <|
+;       viewChart
+;   ]
+; Use anchor to only match the FIRST backpipe operator in the bin_op_expr,
+; not subsequent ones in chained backpipes like: a <| b <| c
+(list_expr
+  (bin_op_expr
+    .
+    (_)  ; first operand
+    .
+    (operator) @append_indent_start
+    (#match? @append_indent_start "^<\\|$")
+  ) @append_indent_end
+)
+
+
 ; Let expressions in lists get extra indentation to align content under let:
 ;   [ let
 ;       x = 1

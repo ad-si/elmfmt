@@ -237,6 +237,11 @@ fn test_list_let_formatting() {
 }
 
 #[test]
+fn test_list_backpipe_formatting() {
+    run_fixture_test("list_backpipe");
+}
+
+#[test]
 fn test_tuple_formatting() {
     run_fixture_test("tuple");
 }
