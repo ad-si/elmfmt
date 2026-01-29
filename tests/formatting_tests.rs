@@ -232,6 +232,11 @@ fn test_list_formatting() {
 }
 
 #[test]
+fn test_list_let_formatting() {
+    run_fixture_test("list_let");
+}
+
+#[test]
 fn test_tuple_formatting() {
     run_fixture_test("tuple");
 }

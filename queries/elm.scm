@@ -742,6 +742,18 @@
   ) @append_indent_end ; close the extra indent
 )
 
+; Let expressions in lists get extra indentation to align content under let:
+;   [ let
+;       x = 1
+;     in
+;     x
+;   ]
+(list_expr
+  (let_in_expr
+    "let" @append_indent_start
+  ) @append_indent_end
+)
+
 ; Empty list [] - no spacing inside
 (list_expr
   "[" @append_antispace
