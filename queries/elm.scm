@@ -665,11 +665,7 @@
   "," @append_space
 )
 
-; Tuple patterns always use compact style (no spaces): (a, b)
-(tuple_pattern
-  "(" @append_antispace
-  ")" @prepend_antispace
-)
+; Tuple pattern spacing is controlled by tuple_spaced.scm / tuple_compact.scm
 
 ; ==============================================================================
 ; Parenthesized expressions

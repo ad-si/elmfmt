@@ -9,16 +9,14 @@ const IF_INDENTED_QUERY: &str = include_str!("../queries/if_indented.scm");
 const TUPLE_SPACED_QUERY: &str = include_str!("../queries/tuple_spaced.scm");
 const TUPLE_COMPACT_QUERY: &str = include_str!("../queries/tuple_compact.scm");
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IfStyle {
-    #[default]
     Indented,
     Hanging,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TupleStyle {
-    #[default]
     Compact,
     Spaced,
 }
@@ -40,28 +38,30 @@ fn build_query(if_style: IfStyle, tuple_style: TupleStyle, newlines_between_decl
     base_query.replace("__DECL_DELIMITER__", &decl_delimiter)
 }
 
+/// Standard test configuration: 2-space indent, indented if-style, compact tuple-style
+/// These are explicit values chosen for test stability - they don't track the CLI defaults.
 fn format_elm(input: &str) -> Result<String> {
-    format_elm_with_options(input, "  ", IfStyle::default(), TupleStyle::default())
+    format_elm_with_options(input, "  ", IfStyle::Indented, TupleStyle::Compact)
 }
 
 fn format_elm_with_indent(input: &str, indent: &str) -> Result<String> {
-    format_elm_with_options(input, indent, IfStyle::default(), TupleStyle::default())
+    format_elm_with_options(input, indent, IfStyle::Indented, TupleStyle::Compact)
 }
 
 fn format_elm_with_if_style(input: &str, if_style: IfStyle) -> Result<String> {
-    format_elm_with_options(input, "  ", if_style, TupleStyle::default())
+    format_elm_with_options(input, "  ", if_style, TupleStyle::Compact)
 }
 
 fn format_elm_with_tuple_style(input: &str, tuple_style: TupleStyle) -> Result<String> {
-    format_elm_with_options(input, "  ", IfStyle::default(), tuple_style)
+    format_elm_with_options(input, "  ", IfStyle::Indented, tuple_style)
 }
 
 fn format_elm_with_newlines(input: &str, newlines_between_decls: u8) -> Result<String> {
     format_elm_full(
         input,
         "  ",
-        IfStyle::default(),
-        TupleStyle::default(),
+        IfStyle::Indented,
+        TupleStyle::Compact,
         newlines_between_decls,
     )
 }
@@ -725,25 +725,6 @@ sign n =
     );
 }
 
-#[test]
-fn test_if_style_default_is_indented() {
-    let input = r#"module Main exposing (abs)
-
-
-abs n =
-    if n < 0 then -n else n
-"#;
-    let result = format_elm(input);
-    assert!(result.is_ok(), "Should format with default if-style");
-    let formatted = result.unwrap();
-    // Default should be indented style
-    assert!(
-        formatted.contains("if n < 0\n    then"),
-        "Default if-style should be indented, got:\n{}",
-        formatted
-    );
-}
-
 // ============================================================================
 // Newlines Between Declarations Tests
 // ============================================================================
@@ -838,23 +819,6 @@ pair = ( 1, 2 )
 }
 
 #[test]
-fn test_tuple_style_default_is_compact() {
-    let input = r#"module Main exposing (pair)
-
-
-pair = ( 1, 2 )
-"#;
-    let result = format_elm(input);
-    assert!(result.is_ok(), "Should format with default tuple style");
-    let formatted = result.unwrap();
-    assert!(
-        formatted.contains("(1, 2)"),
-        "Default tuple style should be compact, got:\n{}",
-        formatted
-    );
-}
-
-#[test]
 fn test_function_call_paren_same_line_as_content() {
     // When a function call has a parenthesized argument with a pipe expression,
     // the opening paren should have the first expression on the same line,
@@ -898,8 +862,8 @@ loadAuthorDicts accessToken repoDict =
 }
 
 #[test]
-fn test_tuple_pattern_always_compact() {
-    // Tuple patterns (destructuring) should always be compact regardless of tuple-style setting
+fn test_tuple_pattern_follows_tuple_style() {
+    // Tuple patterns (destructuring) should follow the tuple-style setting
     let input = r#"module Main exposing (first)
 
 
@@ -912,12 +876,13 @@ first ( a, b ) = a
     let formatted_spaced = result_spaced.unwrap();
     let formatted_compact = result_compact.unwrap();
 
-    // Both should have compact tuple pattern
+    // Spaced style should have spaces in tuple pattern
     assert!(
-        formatted_spaced.contains("first (a, b)"),
-        "Tuple pattern should be compact even with spaced style, got:\n{}",
+        formatted_spaced.contains("first ( a, b )"),
+        "Tuple pattern should be spaced with spaced style, got:\n{}",
         formatted_spaced
     );
+    // Compact style should have no spaces in tuple pattern
     assert!(
         formatted_compact.contains("first (a, b)"),
         "Tuple pattern should be compact with compact style, got:\n{}",

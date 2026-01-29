@@ -39,16 +39,16 @@ pub enum IfStyle {
 #[derive(Debug, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum TupleStyle {
-    /// Compact style (default, no spaces inside parentheses):
+    /// Compact style (no spaces inside parentheses):
     /// ```elm
     /// (a, b)
     /// ```
-    #[default]
     Compact,
-    /// Spaced style (elm-format compatible):
+    /// Spaced style (default, elm-format compatible):
     /// ```elm
     /// ( a, b )
     /// ```
+    #[default]
     Spaced,
 }
 

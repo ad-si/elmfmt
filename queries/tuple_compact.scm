@@ -1,9 +1,15 @@
 ; Compact tuple style
-; Single-line tuples have no spaces inside parentheses: (a, b)
+; Single-line tuples and patterns have no spaces inside parentheses: (a, b)
 ; Multi-line tuples use leading comma style:
 ;   ( first
 ;   , second
 ;   )
+
+; Tuple patterns: (a, b)
+(tuple_pattern
+  "(" @append_antispace
+  ")" @prepend_antispace
+)
 
 ; Multi-line formatting: space after (, closing ) on its own line
 (tuple_expr
