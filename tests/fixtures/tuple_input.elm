@@ -1,4 +1,4 @@
-module Main exposing (multiTuple)
+module Main exposing (multiTuple, tupleWithRecordUpdate)
 
 
 multiTuple =
@@ -8,3 +8,9 @@ multiTuple =
         , cmd
       ]
   )
+
+
+tupleWithRecordUpdate =
+    ({ model
+      | repoChart = RepoChart numberOfDays
+    }, Cmd.none)
