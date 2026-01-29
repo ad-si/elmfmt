@@ -270,6 +270,11 @@ fn test_pipe_multiarg_function_formatting() {
     run_fixture_test("pipe_multiarg_function");
 }
 
+#[test]
+fn test_backpipe_multiline_formatting() {
+    run_fixture_test("backpipe_multiline");
+}
+
 // ============================================================================
 // Comment Tests
 // ============================================================================

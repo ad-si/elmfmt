@@ -566,13 +566,27 @@
   (operator) @prepend_space @append_space
 )
 
-; Pipe operators on new lines in multiline context
+; Forward pipe operators on new lines in multiline context
 (bin_op_expr
   (operator) @prepend_spaced_softline
   (#match? @prepend_spaced_softline "^\\|>$")
 )
 
-; Indent pipe chains - add indent before the pipe, end after its operand
+; Backpipe operators: newline after the operator in multiline context
+(bin_op_expr
+  (operator) @append_spaced_softline
+  (#match? @append_spaced_softline "^<\\|$")
+)
+
+; For non-pipe binary operators in multiline context, add newline before operator
+; This rule applies within any multi-line bin_op_expr (including nested ones)
+(bin_op_expr
+  (operator) @prepend_spaced_softline
+  (#not-match? @prepend_spaced_softline "^(<\\||\\|>)$")
+)
+
+
+; Indent forward pipe chains - add indent before the pipe, end after its operand
 ; For function calls, the pipe indent and function arg indent both apply,
 ; giving args double indentation (pipe level + function arg level)
 (bin_op_expr
@@ -581,6 +595,13 @@
   .
   (_) @append_indent_end
 )
+
+; Indent backpipe chains
+; Use prepend_indent_end so indent context stays active until the very end of the right side
+(bin_op_expr
+  (operator) @append_indent_start
+  (#match? @append_indent_start "^<\\|$")
+) @append_indent_end
 
 ; For function calls in pipes, add an extra indent_start to compensate
 ; for the pipe's indent_end and function call's indent_end being at the
