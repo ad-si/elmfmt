@@ -150,6 +150,11 @@ fn test_imports_formatting() {
 }
 
 #[test]
+fn test_multiline_imports_formatting() {
+    run_fixture_test("multiline_imports");
+}
+
+#[test]
 fn test_blank_lines_formatting() {
     run_fixture_test("blank_lines");
 }

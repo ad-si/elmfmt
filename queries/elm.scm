@@ -50,8 +50,9 @@
   (import) @append_space
 )
 
+; Space before exposing in single-line, newline+indent in multi-line
 (import_clause
-  (exposing_list) @prepend_space
+  (exposing_list) @prepend_spaced_softline @prepend_indent_start @append_indent_end
 )
 
 (import_clause
@@ -87,18 +88,49 @@
 ; Exposing lists
 ; ==============================================================================
 
+; Single-line exposing: exposing (foo, bar, baz)
+; Multi-line exposing (elm-format style with leading commas):
+;   exposing
+;       ( Decoder
+;       , andThen
+;       , bool
+;       )
+
+; In single-line: exposing (foo, bar)
+; In multi-line: exposing\n    ( Decoder
 (exposing_list
-  (exposing) @append_space
-  "(" @append_antispace
+  (exposing) @append_spaced_softline @append_indent_start
 )
 
+; Opening paren always has space after: ( Decoder or (Decoder in single-line
+; The space is normalized to nothing in single-line by the antispace rule below
+(exposing_list
+  "(" @append_space
+)
+
+; Single-line: no space after opening paren - (foo not ( foo
+(exposing_list
+  "(" @append_antispace
+  (#single_line_only!)
+)
+
+; Closing paren: in multi-line on its own line
+; The indent_end is AFTER ) so ) stays at the ( level
+(exposing_list
+  ")" @prepend_spaced_softline @append_indent_end
+)
+
+; Single-line: remove space before closing paren
 (exposing_list
   ")" @prepend_antispace
+  (#single_line_only!)
 )
 
-; Commas in exposing lists - add space after
+; Commas in exposing lists - leading comma style for multiline
+; Single-line: space after comma
+; Multi-line: newline before comma, space after
 (exposing_list
-  "," @append_space
+  "," @prepend_empty_softline @append_space
 )
 
 ; ==============================================================================
