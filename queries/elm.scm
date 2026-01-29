@@ -598,6 +598,16 @@
   (#multi_line_only!)
 )
 
+; Non-pipe binary operators in multi-line parenthesized expressions:
+; Add newline before operator (e.g., ++ on its own line)
+(parenthesized_expr
+  (bin_op_expr
+    (operator) @prepend_spaced_scoped_softline
+    (#not-match? @prepend_spaced_scoped_softline "^\\|>$")
+  )
+  (#scope_id! "paren")
+)
+
 
 ; ==============================================================================
 ; Records
