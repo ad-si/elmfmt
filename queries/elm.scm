@@ -517,6 +517,18 @@
   (arrow) @append_space
 )
 
+; When lambda body is a let expression, put let on its own line with indent
+; \x ->
+;   let
+;     ...
+;   in
+;   body
+(anonymous_function_expr
+  (arrow) @append_spaced_softline @append_indent_start
+  .
+  (let_in_expr) @append_indent_end
+)
+
 
 ; ==============================================================================
 ; Function calls

@@ -202,6 +202,11 @@ fn test_anonymous_function_formatting() {
     run_fixture_test("anonymous_function");
 }
 
+#[test]
+fn test_lambda_let_formatting() {
+    run_fixture_test("lambda_let");
+}
+
 // ============================================================================
 // Data Structure Tests
 // ============================================================================
