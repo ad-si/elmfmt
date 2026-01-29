@@ -545,11 +545,29 @@
 )
 
 ; Indent pipe chains - add indent before the pipe, end after its operand
+; For function calls, the pipe indent and function arg indent both apply,
+; giving args double indentation (pipe level + function arg level)
 (bin_op_expr
   (operator) @prepend_indent_start
   (#match? @prepend_indent_start "^\\|>$")
   .
   (_) @append_indent_end
+)
+
+; For function calls in pipes, add an extra indent_start to compensate
+; for the pipe's indent_end and function call's indent_end being at the
+; same position (after the function call), which cancels one level.
+; We use @prepend_space on the operator since it's already spaced, so this
+; is effectively a no-op that allows us to use the #match? predicate.
+(bin_op_expr
+  (operator) @prepend_space
+  (#match? @prepend_space "^\\|>$")
+  .
+  (function_call_expr
+    .
+    (_) @append_indent_start ; extra indent for function args in pipes
+    (_)
+  ) @append_indent_end ; close the extra indent
 )
 
 ; Cancel pipe indentation when inside a multi-line parenthesized expression

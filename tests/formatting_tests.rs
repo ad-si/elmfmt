@@ -250,6 +250,11 @@ fn test_pipe_let_binding_formatting() {
     run_fixture_test("pipe_let_binding");
 }
 
+#[test]
+fn test_pipe_multiarg_function_formatting() {
+    run_fixture_test("pipe_multiarg_function");
+}
+
 // ============================================================================
 // Comment Tests
 // ============================================================================
