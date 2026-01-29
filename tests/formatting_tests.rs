@@ -274,6 +274,11 @@ fn test_if_nested_let_formatting() {
     run_fixture_test("if_nested_let");
 }
 
+#[test]
+fn test_if_else_chain_formatting() {
+    run_fixture_test("if_else_chain");
+}
+
 // ============================================================================
 // Idempotence Tests
 // ============================================================================
@@ -922,7 +927,7 @@ handleKey keyCode model =
 fn test_chained_if_else_with_multiple_comments() {
     // In chained if-else, when then is followed by multiple comments,
     // the comments and body should be indented, and the next else should
-    // return to the proper indentation level
+    // be at the same level as its paired then (nested style)
     let input = r#"module Main exposing (test)
 
 
@@ -942,15 +947,16 @@ test error =
     let result = format_elm_with_if_style(input, IfStyle::Indented);
     assert!(result.is_ok(), "Should format chained if with comments");
     let formatted = result.unwrap();
-    // Check that after the 4-comment then block, else returns to proper level
+    // In nested style, the final else is at the same level as its paired then
+    // which is indented under "if is404Error"
     assert!(
-        formatted.contains(")\n    else\n      -- Other errors"),
-        "Final else should be at same level as other elses, got:\n{}",
+        formatted.contains(")\n        else\n          -- Other errors"),
+        "Final else should be at same level as its then (nested style), got:\n{}",
         formatted
     );
     // Check that comments after final else are indented
     assert!(
-        formatted.contains("else\n      -- Other errors\n      (model"),
+        formatted.contains("else\n          -- Other errors\n          (model"),
         "Body after final else with comment should be indented, got:\n{}",
         formatted
     );
