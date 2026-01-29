@@ -36,6 +36,172 @@
   (let_in_expr)
 )
 
+; When "then" is followed by a comment, use newline and indent
+(if_else_expr
+  "then" @append_antispace @append_hardline @append_indent_start
+  .
+  (line_comment)
+)
+
+(if_else_expr
+  "then" @append_antispace @append_hardline @append_indent_start
+  .
+  (block_comment)
+)
+
+; Close indent before else when body was preceded by comment(s)
+; This handles both first "then" and subsequent "then"s in chained if-else
+; Handle 1 comment before body
+(if_else_expr
+  (line_comment)
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
+; Handle 2 comments before body
+(if_else_expr
+  (line_comment)
+  (line_comment)
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
+; Handle 3 comments before body
+(if_else_expr
+  (line_comment)
+  (line_comment)
+  (line_comment)
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
+; Handle 4 comments before body
+(if_else_expr
+  (line_comment)
+  (line_comment)
+  (line_comment)
+  (line_comment)
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
+; Same patterns with block_comment
+(if_else_expr
+  (block_comment)
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
 ; Close indent from then-let before any else that immediately follows a let_in_expr
 (if_else_expr
   (let_in_expr)
@@ -219,8 +385,9 @@
 )
 
 ; Final "else" followed by a comment then other expressions
+; Start indent after else, and end it after the body (before the if's indent_end)
 (if_else_expr
-  "else" @append_hardline
+  "else" @append_hardline @append_indent_start
   .
   (line_comment)
   [
@@ -242,11 +409,11 @@
     (anonymous_function_expr)
     (glsl_code_expr)
     (unit_expr)
-  ]
+  ] @append_indent_end
 )
 
 (if_else_expr
-  "else" @append_hardline
+  "else" @append_hardline @append_indent_start
   .
   (block_comment)
   [
@@ -268,5 +435,5 @@
     (anonymous_function_expr)
     (glsl_code_expr)
     (unit_expr)
-  ]
+  ] @append_indent_end
 )

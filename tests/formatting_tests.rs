@@ -862,6 +862,86 @@ loadAuthorDicts accessToken repoDict =
 }
 
 #[test]
+fn test_if_then_else_with_comment_body_indentation() {
+    // When then/else are on their own lines and followed by a comment,
+    // the comment and body should be indented relative to then/else
+    // INPUT:
+    //   if keyCode == 13
+    //     then
+    //     -- Enter key pressed, trigger function
+    //     update AddRepo model
+    //     else model
+    // EXPECTED:
+    //   if keyCode == 13
+    //     then
+    //       -- Enter key pressed, trigger function
+    //       update AddRepo model
+    //     else model
+    let input = r#"module Main exposing (handleKey)
+
+
+handleKey keyCode model =
+    if keyCode == 13
+      then
+      -- Enter key pressed, trigger function
+      update AddRepo model
+      else model
+"#;
+    let result = format_elm_with_if_style(input, IfStyle::Indented);
+    assert!(result.is_ok(), "Should format if with comment after then");
+    let formatted = result.unwrap();
+    // The comment and body after "then" should be indented
+    assert!(
+        formatted.contains("then\n      -- Enter key pressed"),
+        "Comment after 'then' should be indented, got:\n{}",
+        formatted
+    );
+    assert!(
+        formatted.contains("-- Enter key pressed, trigger function\n      update AddRepo model"),
+        "Body after comment should be indented, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_chained_if_else_with_multiple_comments() {
+    // In chained if-else, when then is followed by multiple comments,
+    // the comments and body should be indented, and the next else should
+    // return to the proper indentation level
+    let input = r#"module Main exposing (test)
+
+
+test error =
+    if isRateLimitError error
+      then ( model, Cmd.none )
+      else if is404Error error
+      then -- For 404 errors
+      -- Second comment
+      -- Third comment
+      -- Fourth comment
+      ( model, Cmd.none )
+      else
+      -- Other errors
+      ( model, Cmd.none )
+"#;
+    let result = format_elm_with_if_style(input, IfStyle::Indented);
+    assert!(result.is_ok(), "Should format chained if with comments");
+    let formatted = result.unwrap();
+    // Check that after the 4-comment then block, else returns to proper level
+    assert!(
+        formatted.contains(")\n    else\n      -- Other errors"),
+        "Final else should be at same level as other elses, got:\n{}",
+        formatted
+    );
+    // Check that comments after final else are indented
+    assert!(
+        formatted.contains("else\n      -- Other errors\n      (model"),
+        "Body after final else with comment should be indented, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
 fn test_tuple_pattern_follows_tuple_style() {
     // Tuple patterns (destructuring) should follow the tuple-style setting
     let input = r#"module Main exposing (first)
