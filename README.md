@@ -4,6 +4,12 @@ A code formatter for the [Elm](https://elm-lang.org/) programming language, buil
 
 ## Installation
 
+### From crates.io
+
+```bash
+cargo install elmfmt
+```
+
 ### From source
 
 Requires Rust toolchain.
