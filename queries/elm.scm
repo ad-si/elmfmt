@@ -696,6 +696,20 @@
   "]" @prepend_spaced_softline
 )
 
+; Function calls in lists get extra indentation for their arguments
+; so that args are double-indented from the function name:
+;   [ Http.header
+;       "Authorization"
+;       "token 1234"
+;   ]
+(list_expr
+  (function_call_expr
+    .
+    (_) @append_indent_start ; extra indent for function args in lists
+    (_)
+  ) @append_indent_end ; close the extra indent
+)
+
 ; Empty list [] - no spacing inside
 (list_expr
   "[" @append_antispace
