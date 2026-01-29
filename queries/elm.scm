@@ -582,8 +582,11 @@
 )
 
 ; Field assignment - (eq) is a named node
+; When the field expression spans multiple lines, indent the continuation
 (field
-  (eq) @prepend_space @append_space
+  (eq) @prepend_space @append_space @append_indent_start
+  (_) @append_indent_end
+  .
 )
 
 ; Comments inside records: ensure newline before comments that follow fields
