@@ -20,6 +20,20 @@
 (line_comment) @append_hardline
 (block_comment) @append_hardline
 
+; Add space before ALL line comments in lists, records, tuples
+; e.g. [ "hello"-- comment ] => [ "hello" -- comment ]
+(list_expr
+  (line_comment) @prepend_space
+)
+
+(record_expr
+  (line_comment) @prepend_space
+)
+
+(tuple_expr
+  (line_comment) @prepend_space
+)
+
 ; ==============================================================================
 ; Module declaration
 ; ==============================================================================
@@ -220,6 +234,8 @@
     (type_declaration)
     (type_alias_declaration)
     (port_annotation)
+    (line_comment)
+    (block_comment)
   ]
   (#delimiter! "__DECL_DELIMITER__")
 )
@@ -639,13 +655,7 @@
   .
 )
 
-; Comments inside records: ensure newline before comments that follow fields
-(record_expr
-  (field)
-  .
-  (line_comment) @prepend_hardline
-)
-
+; Block comments inside records on their own line
 (record_expr
   (field)
   .

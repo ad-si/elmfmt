@@ -10,3 +10,10 @@ headers accessToken =
       "Authorization"
       ("token " ++ accessToken)
   ]
+
+
+colors =
+  [ "hsl(176, 100%, 81%)"-- color 0
+  , "hsl(346, 100%, 88%)"-- color 1
+  , "hsl(79, 100%, 86%)"-- color 2
+  ]
