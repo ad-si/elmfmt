@@ -29,3 +29,16 @@ multipleLetBindings =
       first y
   in
   second 42
+
+
+-- Keep wrapping style
+inlineLetWrapping =
+  let
+    first = 1
+    second = 2
+    third =
+      3
+    fourth =
+      4
+  in
+  first + second + third + fourth
