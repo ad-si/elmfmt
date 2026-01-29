@@ -217,6 +217,11 @@ fn test_record_field_multiline_formatting() {
 }
 
 #[test]
+fn test_record_type_multiline_formatting() {
+    run_fixture_test("record_type_multiline");
+}
+
+#[test]
 fn test_list_formatting() {
     run_fixture_test("list");
 }

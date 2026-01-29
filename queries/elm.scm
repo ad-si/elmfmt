@@ -634,14 +634,30 @@
   (block_comment) @prepend_hardline
 )
 
-; Record types
+; Record types - elm-format style uses leading commas:
+;   { numberOfDays : NumberOfDays
+;   , numberOfRepos : NumberOfRepos
+;   }
 (record_type
-  "{" @append_spaced_softline @append_indent_start
-  "}" @prepend_spaced_softline @prepend_indent_end
+  "{" @append_space
+  "}" @prepend_spaced_softline
 )
 
+; Empty record type {} - no spacing inside
 (record_type
-  "," @append_spaced_softline
+  "{" @append_antispace
+  .
+  "}"
+)
+(record_type
+  "{"
+  .
+  "}" @prepend_antispace
+)
+
+; Leading comma style: newline before comma, space after
+(record_type
+  "," @prepend_empty_softline @append_space
 )
 
 (field_type
