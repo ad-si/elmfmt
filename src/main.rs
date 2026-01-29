@@ -144,6 +144,18 @@ struct Args {
     /// Skip idempotence check
     #[arg(long)]
     skip_idempotence: bool,
+
+    /// Read from stdin (for compatibility with elm-format)
+    #[arg(long)]
+    stdin: bool,
+
+    /// Elm version (ignored, for compatibility with elm-format)
+    #[arg(long, value_name = "VERSION")]
+    elm_version: Option<String>,
+
+    /// Auto-confirm (ignored, for compatibility with elm-format)
+    #[arg(long)]
+    yes: bool,
 }
 
 /// The base Elm formatting query file (without if-expression rules)
@@ -211,8 +223,8 @@ fn format_content(content: &str, language: &Language, skip_idempotence: bool) ->
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    // Check if input is a directory
-    let is_directory = args.input.as_ref().is_some_and(|p| p.is_dir());
+    // Check if input is a directory (but not if --stdin is specified)
+    let is_directory = !args.stdin && args.input.as_ref().is_some_and(|p| p.is_dir());
 
     if is_directory {
         // Directory mode: format all .elm files recursively
@@ -275,8 +287,14 @@ fn main() -> Result<()> {
         let config_search_dir = args.input.as_ref().and_then(|p| p.parent());
         let config = Config::load(config_search_dir)?;
 
-        // Read input
-        let input_content = if let Some(ref path) = args.input {
+        // Read input (--stdin flag takes precedence over input file)
+        let input_content = if args.stdin {
+            let mut buffer = String::new();
+            io::stdin()
+                .read_to_string(&mut buffer)
+                .context("Failed to read from stdin")?;
+            buffer
+        } else if let Some(ref path) = args.input {
             fs::read_to_string(path)
                 .with_context(|| format!("Failed to read file: {}", path.display()))?
         } else {
