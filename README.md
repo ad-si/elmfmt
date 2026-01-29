@@ -79,3 +79,22 @@ if condition
     then expr1
     else expr2
 ```
+
+
+## Editor Integration
+
+### VSCode
+
+To use elmfmt with the
+[Elm Language Server extension](https://marketplace.visualstudio.com/items?itemName=Elmtooling.elm-ls-vscode),
+add the following to your VSCode settings:
+
+```json
+{
+  "elmLS.elmFormatPath": "/Users/your-username/.cargo/bin/elmfmt"
+}
+```
+
+Replace `/Users/your-username/.cargo/bin/elmfmt` with the actual path
+to your elmfmt binary.
+You can find it by running `which elmfmt` after installation.
