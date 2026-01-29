@@ -512,6 +512,27 @@
   (#match? @prepend_spaced_softline "^\\|>$")
 )
 
+; Indent pipe chains - add indent before the pipe, end after its operand
+(bin_op_expr
+  (operator) @prepend_indent_start
+  (#match? @prepend_indent_start "^\\|>$")
+  .
+  (_) @append_indent_end
+)
+
+; Cancel pipe indentation when inside a multi-line parenthesized expression
+; (parentheses already provide indentation)
+(parenthesized_expr
+  (bin_op_expr
+    (operator) @prepend_indent_end
+    (#match? @prepend_indent_end "^\\|>$")
+    .
+    (_) @append_indent_start
+  )
+  (#multi_line_only!)
+)
+
+
 ; ==============================================================================
 ; Records
 ; ==============================================================================
@@ -657,9 +678,11 @@
 ;   (Dict.toList repoDict
 ;     |> List.map ...
 ;   )
+; Define a scope so pipes inside don't add extra indentation
 (parenthesized_expr
-  "(" @append_indent_start
-  ")" @prepend_empty_softline @prepend_indent_end
+  "(" @append_indent_start @append_begin_scope
+  ")" @prepend_empty_softline @prepend_indent_end @prepend_end_scope
+  (#scope_id! "paren")
 )
 
 ; For single-line parenthesized expressions, no extra space: (foo)

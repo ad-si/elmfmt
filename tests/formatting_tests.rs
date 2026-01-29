@@ -230,6 +230,11 @@ fn test_parenthesized_pipe_formatting() {
     run_fixture_test("parenthesized_pipe");
 }
 
+#[test]
+fn test_pipe_let_binding_formatting() {
+    run_fixture_test("pipe_let_binding");
+}
+
 // ============================================================================
 // Comment Tests
 // ============================================================================
