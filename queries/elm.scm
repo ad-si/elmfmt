@@ -194,6 +194,21 @@
   (upper_case_identifier) @append_space
 )
 
+; Space between type variables in parameterized type declarations
+; e.g., type Codecs valueId valueTasks_state_String valueUpload
+(type_declaration
+  (lower_type_name) @append_space
+  .
+  (lower_type_name)
+)
+
+; Space after the last type variable before the equals sign
+(type_declaration
+  (lower_type_name) @append_space
+  .
+  (eq)
+)
+
 ; Indent union variants - use (eq) since = is a named node
 ; In multiline types, the = goes on a new line before the first variant:
 ;   type ChartEvent
@@ -256,6 +271,21 @@
 
 (type_alias_declaration
   (upper_case_identifier) @append_space
+)
+
+; Space between type variables in parameterized type alias declarations
+; e.g., type alias RawCodecs valueId valueTasks_state_String valueUpload
+(type_alias_declaration
+  (lower_type_name) @append_space
+  .
+  (lower_type_name)
+)
+
+; Space after the last type variable before the equals sign in type alias
+(type_alias_declaration
+  (lower_type_name) @append_space
+  .
+  (eq)
 )
 
 (type_alias_declaration
