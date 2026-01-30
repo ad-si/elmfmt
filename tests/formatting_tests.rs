@@ -159,6 +159,11 @@ fn test_blank_lines_formatting() {
     run_fixture_test("blank_lines");
 }
 
+#[test]
+fn test_doc_comment_after_import_formatting() {
+    run_fixture_test("doc_comment_after_import");
+}
+
 // ============================================================================
 // Type Tests
 // ============================================================================

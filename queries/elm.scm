@@ -127,6 +127,14 @@
   (#delimiter! "__DECL_DELIMITER__")
 )
 
+; Blank line after all imports before block comments (e.g., doc comments)
+(
+  (import_clause) @append_delimiter
+  .
+  (block_comment)
+  (#delimiter! "__DECL_DELIMITER__")
+)
+
 ; ==============================================================================
 ; Exposing lists
 ; ==============================================================================
