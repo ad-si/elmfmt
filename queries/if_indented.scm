@@ -71,12 +71,10 @@
   (block_comment)
 )
 
-; Close indent before else when body was preceded by comment(s)
-; This handles both first "then" and subsequent "then"s in chained if-else
-; Handle 1 comment before body
+; Close indent before else when body was preceded by comment(s) and directly precedes else.
+; The anchor between body and else is critical to ensure we only match when body . else.
 (if_else_expr
   (line_comment)
-  .
   [
     (value_expr)
     (number_constant_expr)
@@ -102,103 +100,8 @@
   "else" @prepend_indent_end
 )
 
-; Handle 2 comments before body
-(if_else_expr
-  (line_comment)
-  (line_comment)
-  .
-  [
-    (value_expr)
-    (number_constant_expr)
-    (char_constant_expr)
-    (string_constant_expr)
-    (function_call_expr)
-    (field_access_expr)
-    (operator_as_function_expr)
-    (negate_expr)
-    (bin_op_expr)
-    (parenthesized_expr)
-    (tuple_expr)
-    (list_expr)
-    (record_expr)
-    (case_of_expr)
-    (let_in_expr)
-    (if_else_expr)
-    (anonymous_function_expr)
-    (glsl_code_expr)
-    (unit_expr)
-  ]
-  .
-  "else" @prepend_indent_end
-)
-
-; Handle 3 comments before body
-(if_else_expr
-  (line_comment)
-  (line_comment)
-  (line_comment)
-  .
-  [
-    (value_expr)
-    (number_constant_expr)
-    (char_constant_expr)
-    (string_constant_expr)
-    (function_call_expr)
-    (field_access_expr)
-    (operator_as_function_expr)
-    (negate_expr)
-    (bin_op_expr)
-    (parenthesized_expr)
-    (tuple_expr)
-    (list_expr)
-    (record_expr)
-    (case_of_expr)
-    (let_in_expr)
-    (if_else_expr)
-    (anonymous_function_expr)
-    (glsl_code_expr)
-    (unit_expr)
-  ]
-  .
-  "else" @prepend_indent_end
-)
-
-; Handle 4 comments before body
-(if_else_expr
-  (line_comment)
-  (line_comment)
-  (line_comment)
-  (line_comment)
-  .
-  [
-    (value_expr)
-    (number_constant_expr)
-    (char_constant_expr)
-    (string_constant_expr)
-    (function_call_expr)
-    (field_access_expr)
-    (operator_as_function_expr)
-    (negate_expr)
-    (bin_op_expr)
-    (parenthesized_expr)
-    (tuple_expr)
-    (list_expr)
-    (record_expr)
-    (case_of_expr)
-    (let_in_expr)
-    (if_else_expr)
-    (anonymous_function_expr)
-    (glsl_code_expr)
-    (unit_expr)
-  ]
-  .
-  "else" @prepend_indent_end
-)
-
-; Same patterns with block_comment
 (if_else_expr
   (block_comment)
-  .
   [
     (value_expr)
     (number_constant_expr)
@@ -224,13 +127,17 @@
   "else" @prepend_indent_end
 )
 
-; Close indent from then-let before any else that immediately follows a let_in_expr
-; This only fires when there's no comment before the let_in_expr.
-; We need to handle both first "then" and middle "then"s in else-if chains.
+; Close indent from then-let before else that immediately follows let_in_expr
+; This ONLY applies when "then" is DIRECTLY followed by let_in_expr (no comment).
+; When there's a comment before let, the comment pattern (above) handles closing.
 ;
-; First "then" case: if ... then let ... in ... else
+; We need separate patterns because tree-sitter query matching seems to struggle
+; with finding patterns when there are multiple instances of the same token type.
+
+; Simple if-then-let-else (no else-if)
 (if_else_expr
-  . "if" (_)
+  . "if"
+  (_)
   "then"
   .
   (let_in_expr)
@@ -238,11 +145,11 @@
   "else" @prepend_indent_end
 )
 
-; Middle "then" case: else if ... then let ... in ... else
-; This matches when there's an else-if pattern before the then-let
+; 1 else-if pair where the else-if branch has let
 (if_else_expr
   "else"
-  "if" (_)
+  "if"
+  (_)
   "then"
   .
   (let_in_expr)
@@ -250,74 +157,45 @@
   "else" @prepend_indent_end
 )
 
-; Same but with comments between let and else (for first "then")
+; 2 else-if pairs where the last else-if branch has let
 (if_else_expr
-  . "if" (_)
-  "then"
-  .
-  (let_in_expr)
-  .
-  (line_comment)
-  "else" @prepend_indent_end
-)
-
-(if_else_expr
-  . "if" (_)
-  "then"
-  .
-  (let_in_expr)
-  .
-  (line_comment)
-  (line_comment)
-  "else" @prepend_indent_end
-)
-
-(if_else_expr
-  . "if" (_)
-  "then"
-  .
-  (let_in_expr)
-  .
-  (line_comment)
-  (line_comment)
-  (line_comment)
-  "else" @prepend_indent_end
-)
-
-; Same but with comments between let and else (for middle "then"s)
-(if_else_expr
+  "else" "if" (_) "then" (_)
   "else"
-  "if" (_)
+  "if"
+  (_)
   "then"
   .
   (let_in_expr)
   .
-  (line_comment)
   "else" @prepend_indent_end
 )
 
+; 3 else-if pairs where the last else-if branch has let
 (if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
   "else"
-  "if" (_)
+  "if"
+  (_)
   "then"
   .
   (let_in_expr)
   .
-  (line_comment)
-  (line_comment)
   "else" @prepend_indent_end
 )
 
+; 4 else-if pairs where the last else-if branch has let
 (if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
   "else"
-  "if" (_)
+  "if"
+  (_)
   "then"
   .
   (let_in_expr)
   .
-  (line_comment)
-  (line_comment)
-  (line_comment)
   "else" @prepend_indent_end
 )
 

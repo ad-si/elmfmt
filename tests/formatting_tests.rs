@@ -316,6 +316,19 @@ fn test_if_comment_let_formatting() {
     run_fixture_test("if_comment_let");
 }
 
+#[test]
+fn test_if_nested_if_else_chain_formatting() {
+    // Test: nested if inside outer if-else-if chain with let expressions
+    run_fixture_test("if_nested_if_else_chain");
+}
+
+#[test]
+fn test_if_else_chain_let_formatting() {
+    // Test: else-if chain with let in middle branch
+    // This was causing incorrect indentation of the final else
+    run_fixture_test("if_else_chain_let");
+}
+
 // ============================================================================
 // Idempotence Tests
 // ============================================================================
