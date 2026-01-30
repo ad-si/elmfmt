@@ -309,6 +309,13 @@ fn test_if_else_chain_formatting() {
     run_fixture_test("if_else_chain");
 }
 
+#[test]
+fn test_if_comment_let_formatting() {
+    // Test: comment followed by let expression in if branches
+    // This was causing "Trying to close an unopened indentation block" error
+    run_fixture_test("if_comment_let");
+}
+
 // ============================================================================
 // Idempotence Tests
 // ============================================================================

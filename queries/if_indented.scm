@@ -225,14 +225,36 @@
 )
 
 ; Close indent from then-let before any else that immediately follows a let_in_expr
+; This only fires when there's no comment before the let_in_expr.
+; We need to handle both first "then" and middle "then"s in else-if chains.
+;
+; First "then" case: if ... then let ... in ... else
 (if_else_expr
+  . "if" (_)
+  "then"
+  .
   (let_in_expr)
   .
   "else" @prepend_indent_end
 )
 
-; Same but with comments between let and else
+; Middle "then" case: else if ... then let ... in ... else
+; This matches when there's an else-if pattern before the then-let
 (if_else_expr
+  "else"
+  "if" (_)
+  "then"
+  .
+  (let_in_expr)
+  .
+  "else" @prepend_indent_end
+)
+
+; Same but with comments between let and else (for first "then")
+(if_else_expr
+  . "if" (_)
+  "then"
+  .
   (let_in_expr)
   .
   (line_comment)
@@ -240,6 +262,9 @@
 )
 
 (if_else_expr
+  . "if" (_)
+  "then"
+  .
   (let_in_expr)
   .
   (line_comment)
@@ -248,6 +273,46 @@
 )
 
 (if_else_expr
+  . "if" (_)
+  "then"
+  .
+  (let_in_expr)
+  .
+  (line_comment)
+  (line_comment)
+  (line_comment)
+  "else" @prepend_indent_end
+)
+
+; Same but with comments between let and else (for middle "then"s)
+(if_else_expr
+  "else"
+  "if" (_)
+  "then"
+  .
+  (let_in_expr)
+  .
+  (line_comment)
+  "else" @prepend_indent_end
+)
+
+(if_else_expr
+  "else"
+  "if" (_)
+  "then"
+  .
+  (let_in_expr)
+  .
+  (line_comment)
+  (line_comment)
+  "else" @prepend_indent_end
+)
+
+(if_else_expr
+  "else"
+  "if" (_)
+  "then"
+  .
   (let_in_expr)
   .
   (line_comment)
