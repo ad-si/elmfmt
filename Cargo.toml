@@ -10,7 +10,7 @@ categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
 topiary-core = "0.6"
-tree-sitter-elm = "5"
+tree-sitter-elm = { path = "tree-sitter-elm" }
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"
 serde = { version = "1", features = ["derive"] }

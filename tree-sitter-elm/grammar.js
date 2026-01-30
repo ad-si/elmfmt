@@ -17,7 +17,6 @@ module.exports = grammar({
   conflicts: ($) => [
     [$.upper_case_qid, $.value_qid],
     [$.function_call_expr],
-    [$.case_of_expr],
     [$._function_call_target, $._atom],
   ],
 
@@ -527,28 +526,21 @@ module.exports = grammar({
     _then: ($) => seq("then", field("exprList", $._expression)),
     _else: ($) => seq("else", field("exprList", $._expression)),
 
+    // Note: Previously had a parenthesized variant `seq("(", $.case, ..., ")")`
+    // but this caused ambiguous parsing where `(case x of ...)` could be parsed
+    // either as parenthesized_expr containing case_of_expr, or as case_of_expr
+    // directly. The parser chose differently based on lookahead (whether there
+    // were subsequent declarations), causing inconsistent formatting.
+    // Now parentheses are always handled by parenthesized_expr.
     case_of_expr: ($) =>
-      choice(
-        seq(
-          "(",
-          $.case,
-          field("expr", $._expression),
-          $.of,
-          $._virtual_open_section,
-          field("branch", $.case_of_branch),
-          optional($._more_case_of_branches),
-          optional($._virtual_end_section),
-          ")"
-        ),
-        seq(
-          $.case,
-          field("expr", $._expression),
-          $.of,
-          $._virtual_open_section,
-          field("branch", $.case_of_branch),
-          optional($._more_case_of_branches),
-          $._virtual_end_section
-        )
+      seq(
+        $.case,
+        field("expr", $._expression),
+        $.of,
+        $._virtual_open_section,
+        field("branch", $.case_of_branch),
+        optional($._more_case_of_branches),
+        $._virtual_end_section
       ),
 
     _more_case_of_branches: ($) =>

@@ -222,10 +222,30 @@
 )
 
 ; Space between consecutive type arguments in union variants
+; Space after type_ref (simple types like Int, String)
 (union_variant
-  (_) @append_space
+  (type_ref) @append_space
   .
   (_)
+)
+; Space after type_variable (like a, msg)
+(union_variant
+  (type_variable) @append_space
+  .
+  (_)
+)
+; Space after closing paren of parenthesized types
+(union_variant
+  ")" @append_space
+  .
+  (_)
+)
+; No space inside parentheses in union variants
+(union_variant
+  "(" @append_antispace
+)
+(union_variant
+  ")" @prepend_antispace
 )
 
 ; Type alias
@@ -373,17 +393,88 @@
   (_)
 )
 
-; Add spaces between all patterns (arguments) in function declarations
-; Use wildcards without field names to properly match repeated siblings
+; Add spaces between pattern arguments in function declarations
+; Space after simple patterns (not parentheses)
 (function_declaration_left
-  (_) @append_space
+  (lower_pattern) @append_space
   .
   (_)
+)
+(function_declaration_left
+  (anything_pattern) @append_space
+  .
+  (_)
+)
+(function_declaration_left
+  (record_pattern) @append_space
+  .
+  (_)
+)
+(function_declaration_left
+  (tuple_pattern) @append_space
+  .
+  (_)
+)
+(function_declaration_left
+  (list_pattern) @append_space
+  .
+  (_)
+)
+(function_declaration_left
+  (unit_expr) @append_space
+  .
+  (_)
+)
+(function_declaration_left
+  (nullary_constructor_argument_pattern) @append_space
+  .
+  (_)
+)
+; Space after closing paren of parenthesized patterns
+(function_declaration_left
+  ")" @append_space
+  .
+  (_)
+)
+; No space inside parentheses in function argument patterns
+(function_declaration_left
+  "(" @append_antispace
+)
+(function_declaration_left
+  ")" @prepend_antispace
 )
 
 ; Space after the last pattern before the equals sign
 (function_declaration_left
-  (_) @append_space
+  (lower_pattern) @append_space
+  .
+)
+(function_declaration_left
+  (anything_pattern) @append_space
+  .
+)
+(function_declaration_left
+  (record_pattern) @append_space
+  .
+)
+(function_declaration_left
+  (tuple_pattern) @append_space
+  .
+)
+(function_declaration_left
+  (list_pattern) @append_space
+  .
+)
+(function_declaration_left
+  (unit_expr) @append_space
+  .
+)
+(function_declaration_left
+  (nullary_constructor_argument_pattern) @append_space
+  .
+)
+(function_declaration_left
+  ")" @append_space
   .
 )
 
@@ -957,7 +1048,7 @@
   (_)
 )
 
-; Tuple patterns
+; Tuple patterns (spacing inside parens is handled by tuple style query files)
 (tuple_pattern
   "," @append_space
 )
@@ -965,6 +1056,12 @@
 ; Record patterns
 (record_pattern
   "," @append_space
+)
+
+; Spacing inside record patterns: { foo, bar } not {foo,bar}
+(record_pattern
+  "{" @append_space
+  "}" @prepend_space
 )
 
 ; List patterns
@@ -975,6 +1072,11 @@
 ; Cons patterns: x :: xs, (Just submatch) :: _
 (cons_pattern
   "::" @prepend_space @append_space
+)
+
+; As patterns: ({ foo } as bar) needs space before and after 'as'
+(pattern
+  (as) @prepend_space @append_space
 )
 
 ; ==============================================================================

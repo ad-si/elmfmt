@@ -391,6 +391,45 @@ nested =
 }
 
 #[test]
+fn test_nested_case_in_parentheses() {
+    // Issue: Nested case expression inside parentheses causes idempotence failure
+    // when followed by other declarations
+    let input = r#"module Main exposing (..)
+
+
+view model =
+    { title = "TaskLite"
+    , body =
+        [ toUnstyled <|
+            div [ css [ T.h_full ] ]
+                (case model.isLoading || model.tasks == [] of
+                    True ->
+                        [ p [] [ text "Loading …" ] ]
+
+                    False ->
+                        case model.errors of
+                            [] ->
+                                viewTasks model.tasks
+
+                            _ ->
+                                viewErrors model.errors
+                )
+        ]
+    }
+
+
+main =
+    text "hello"
+"#;
+    let result = format_elm(input);
+    assert!(
+        result.is_ok(),
+        "Should handle nested case in parentheses: {:?}",
+        result.err()
+    );
+}
+
+#[test]
 fn test_long_function_call() {
     let input = r#"module Main exposing (view)
 
@@ -1033,5 +1072,44 @@ first ( a, b ) = a
         formatted_compact.contains("first (a, b)"),
         "Tuple pattern should be compact with compact style, got:\n{}",
         formatted_compact
+    );
+}
+
+#[test]
+fn test_union_variant_with_multiple_parenthesized_types() {
+    // Union variants with multiple parenthesized type arguments should have
+    // proper spacing between them: (List String) (List Int) not (List String )(List Int)
+    let input = r#"module Test exposing (..)
+
+
+type Msg
+    = Complete (List String) (List Outcome) Posix Posix
+"#;
+    let result = format_elm(input);
+    assert!(result.is_ok());
+    let formatted = result.unwrap();
+    assert!(
+        formatted.contains("Complete (List String) (List Outcome) Posix Posix"),
+        "Union variant should have proper spacing between parenthesized type args, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
+fn test_as_pattern_with_record() {
+    // Record patterns with 'as' binding should have proper spacing
+    // ({ foo } as bar) not ({foo}asbar)
+    let input = r#"module Test exposing (..)
+
+
+update msg ({ testReporter } as model) = msg
+"#;
+    let result = format_elm(input);
+    assert!(result.is_ok());
+    let formatted = result.unwrap();
+    assert!(
+        formatted.contains("({ testReporter } as model)"),
+        "Pattern with 'as' should have proper spacing, got:\n{}",
+        formatted
     );
 }

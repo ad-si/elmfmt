@@ -620,8 +620,6 @@ dependencies = [
 [[package]]
 name = "tree-sitter-elm"
 version = "5.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23840259bfc74d3fc7638047002703bac8624f4969fd73226d7ed516a1b91e9c"
 dependencies = [
  "cc",
  "tree-sitter-language",
