@@ -988,6 +988,21 @@ test error =
 }
 
 #[test]
+fn test_port_record_type_formatting() {
+    run_fixture_test("port_record_type");
+}
+
+#[test]
+fn test_doc_comment_after_type_formatting() {
+    run_fixture_test("doc_comment_after_type");
+}
+
+#[test]
+fn test_list_cons_let_formatting() {
+    run_fixture_test("list_cons_let");
+}
+
+#[test]
 fn test_tuple_pattern_follows_tuple_style() {
     // Tuple patterns (destructuring) should follow the tuple-style setting
     let input = r#"module Main exposing (first)

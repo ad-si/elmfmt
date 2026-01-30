@@ -249,6 +249,8 @@
     (type_declaration)
     (type_alias_declaration)
     (port_annotation)
+    (line_comment)
+    (block_comment)
   ]
   (#delimiter! "__DECL_DELIMITER__")
 )
@@ -294,8 +296,13 @@
 ; ==============================================================================
 
 ; Arrow in type expressions: a -> b
+; In multiline context, put arrow on its own line:
+;   { key : String
+;   , value : Value
+;   }
+;   -> Cmd msg
 (type_expression
-  (arrow) @prepend_space @append_space
+  (arrow) @prepend_spaced_softline @append_space
 )
 
 ; Type application: List Int
@@ -644,6 +651,35 @@
   (#match? @append_indent_start "^<\\|$")
 ) @append_indent_end
 
+; Cons operator (::) gets indented like forward pipe in multiline:
+;   content
+;       :: more
+(bin_op_expr
+  (operator) @prepend_spaced_softline @prepend_indent_start
+  (#match? @prepend_spaced_softline "^::$")
+  .
+  (_) @append_indent_end
+)
+
+; Let expressions in parentheses that are part of cons operation get extra indent:
+;   content
+;       :: (let
+;               x = 1
+;            in
+;            x
+;          )
+(bin_op_expr
+  (operator) @prepend_space
+  (#match? @prepend_space "^::$")
+  .
+  (parenthesized_expr
+    "(" @append_indent_start
+    (let_in_expr
+      "let" @append_indent_start
+    ) @append_indent_end
+  ) @append_indent_end
+)
+
 ; For function calls in pipes, add an extra indent_start to compensate
 ; for the pipe's indent_end and function call's indent_end being at the
 ; same position (after the function call), which cancels one level.
@@ -941,10 +977,21 @@
   (port) @append_space
 )
 
-; Space around the colon in port annotations
+; Port annotations use similar indentation to type annotations:
+; In multiline, put type expression on next line indented:
+;   port sendToLocalStorage :
+;       { key : String
+;       , value : Json.Encode.Value
+;       }
+;       -> Cmd msg
 (port_annotation
   (lower_case_identifier) @append_space
-  (colon) @append_space
+  (colon) @append_spaced_softline @append_indent_start
+)
+
+(port_annotation
+  (type_expression) @append_indent_end
+  .
 )
 
 ; Blank line after port annotation
