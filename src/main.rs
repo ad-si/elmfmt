@@ -125,11 +125,11 @@ impl Config {
 #[command(name = "elmfmt")]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    /// Input file to format. If not provided, reads from stdin
+    /// Input files or directories to format. If not provided, reads from stdin
     #[arg(value_name = "FILE")]
-    input: Option<PathBuf>,
+    input: Vec<PathBuf>,
 
-    /// Write output to file instead of stdout
+    /// Write output to file instead of stdout (only valid with a single input file)
     #[arg(short, long, value_name = "FILE")]
     output: Option<PathBuf>,
 
@@ -223,25 +223,42 @@ fn format_content(content: &str, language: &Language, skip_idempotence: bool) ->
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    // Check if input is a directory (but not if --stdin is specified)
-    let is_directory = !args.stdin && args.input.as_ref().is_some_and(|p| p.is_dir());
+    // Determine if we're in multi-file mode (multiple inputs or any directories)
+    let has_multiple_inputs = args.input.len() > 1;
+    let has_directory = !args.stdin && args.input.iter().any(|p| p.is_dir());
+    let multi_file_mode = !args.stdin && (has_multiple_inputs || has_directory);
 
-    if is_directory {
-        // Directory mode: format all .elm files recursively
-        let dir = args.input.as_ref().unwrap();
-
+    if multi_file_mode {
+        // Multi-file mode: format all specified files and directories
         if args.output.is_some() {
-            anyhow::bail!("Cannot use --output with a directory input");
+            anyhow::bail!("Cannot use --output with multiple inputs or directories");
         }
         if !args.in_place && !args.check {
-            anyhow::bail!("When formatting a directory, you must use --in-place or --check");
+            anyhow::bail!(
+                "When formatting multiple files or directories, you must use --in-place or --check"
+            );
         }
 
-        let files = find_elm_files(dir)?;
+        // Collect all files from all inputs
+        let mut files = Vec::new();
+        for input in &args.input {
+            if input.is_dir() {
+                files.extend(find_elm_files(input)?);
+            } else if input.is_file() {
+                files.push(input.clone());
+            } else {
+                anyhow::bail!("Input path does not exist: {}", input.display());
+            }
+        }
+
         if files.is_empty() {
-            eprintln!("No .elm files found in {}", dir.display());
+            eprintln!("No .elm files found");
             return Ok(());
         }
+
+        // Remove duplicates and sort
+        files.sort();
+        files.dedup();
 
         let mut needs_formatting = false;
 
@@ -284,7 +301,8 @@ fn main() -> Result<()> {
         }
     } else {
         // Single file or stdin mode
-        let config_search_dir = args.input.as_ref().and_then(|p| p.parent());
+        let single_input = args.input.first();
+        let config_search_dir = single_input.and_then(|p| p.parent());
         let config = Config::load(config_search_dir)?;
 
         // Read input (--stdin flag takes precedence over input file)
@@ -294,7 +312,7 @@ fn main() -> Result<()> {
                 .read_to_string(&mut buffer)
                 .context("Failed to read from stdin")?;
             buffer
-        } else if let Some(ref path) = args.input {
+        } else if let Some(ref path) = single_input {
             fs::read_to_string(path)
                 .with_context(|| format!("Failed to read file: {}", path.display()))?
         } else {
@@ -330,7 +348,7 @@ fn main() -> Result<()> {
 
         // Write output
         if args.in_place {
-            if let Some(ref path) = args.input {
+            if let Some(ref path) = single_input {
                 fs::write(path, &formatted)
                     .with_context(|| format!("Failed to write file: {}", path.display()))?;
             } else {
