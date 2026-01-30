@@ -20,7 +20,7 @@
 (line_comment) @append_hardline
 (block_comment) @append_hardline
 
-; Add space before ALL line comments in lists, records, tuples
+; Add space before ALL line comments in lists, records, tuples, case expressions
 ; e.g. [ "hello"-- comment ] => [ "hello" -- comment ]
 (list_expr
   (line_comment) @prepend_space
@@ -32,6 +32,35 @@
 
 (tuple_expr
   (line_comment) @prepend_space
+)
+
+(case_of_expr
+  (line_comment) @prepend_space
+)
+
+; Preserve blank lines between consecutive top-level comments
+(file
+  (line_comment) @append_hardline
+  .
+  (line_comment) @allow_blank_line_before
+)
+
+(file
+  (block_comment) @append_hardline
+  .
+  (line_comment) @allow_blank_line_before
+)
+
+(file
+  (line_comment) @append_hardline
+  .
+  (block_comment) @allow_blank_line_before
+)
+
+(file
+  (block_comment) @append_hardline
+  .
+  (block_comment) @allow_blank_line_before
 )
 
 ; ==============================================================================
@@ -475,8 +504,20 @@
   (of) @prepend_space @append_hardline @append_indent_start
 )
 
+; End indent after the last child of case expression
+; This could be a case_of_branch or a line_comment after the last branch
 (case_of_expr
   (case_of_branch) @append_indent_end
+  .
+)
+
+(case_of_expr
+  (line_comment) @append_indent_end
+  .
+)
+
+(case_of_expr
+  (block_comment) @append_indent_end
   .
 )
 

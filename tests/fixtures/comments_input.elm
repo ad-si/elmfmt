@@ -40,3 +40,9 @@ type alias Person =
 -- This is a multi-line comment
 -- after a type alias.
 -- It should not be moved.
+
+-- Comments in case expressions
+caseWithComments x =
+  case x of
+    A -> foo -- after A
+    B -> bar -- after B
