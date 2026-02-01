@@ -904,6 +904,20 @@
   .
 )
 
+; Let expressions in record fields: put let on new line after = with extra indent
+; Since let expressions are always multi-line, use hardline for idempotence
+;   { field =
+;       let
+;           x = 1
+;       in
+;       x
+;   }
+(field
+  (eq)
+  .
+  (let_in_expr) @prepend_hardline @prepend_indent_start @append_indent_end
+)
+
 ; Block comments inside records on their own line
 (record_expr
   (field)
