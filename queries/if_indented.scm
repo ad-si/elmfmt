@@ -36,11 +36,20 @@
   (let_in_expr)
 )
 
-; When a multi-line tuple or parenthesized expr follows then, add newline and indent
+; When a multi-line tuple or parenthesized expr follows then DIRECTLY, add newline and indent
 ; We detect multi-line using #multi_line_only! which checks if the matched nodes span
-; multiple lines in the input
+; multiple lines in the input.
+;
+; We need separate patterns for the first "then" (using . "if" anchor) and else-if "then"s.
+; The anchor (.) ensures this only matches when then is directly followed by the
+; tuple/parenthesized expr, not when there are comments in between.
+
+; First then (after initial "if")
 (if_else_expr
+  . "if"
+  (_)
   "then"
+  .
   (tuple_expr
     "(" @prepend_empty_softline @prepend_indent_start
     ")" @append_indent_end
@@ -49,7 +58,130 @@
 )
 
 (if_else_expr
+  . "if"
+  (_)
   "then"
+  .
+  (parenthesized_expr
+    "(" @prepend_empty_softline @prepend_indent_start
+    ")" @append_indent_end
+  )
+  (#multi_line_only!)
+)
+
+; Else-if then (after "else if") - 1st else-if
+(if_else_expr
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (tuple_expr
+    "(" @prepend_empty_softline @prepend_indent_start
+    ")" @append_indent_end
+  )
+  (#multi_line_only!)
+)
+
+(if_else_expr
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (parenthesized_expr
+    "(" @prepend_empty_softline @prepend_indent_start
+    ")" @append_indent_end
+  )
+  (#multi_line_only!)
+)
+
+; 2nd else-if
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (tuple_expr
+    "(" @prepend_empty_softline @prepend_indent_start
+    ")" @append_indent_end
+  )
+  (#multi_line_only!)
+)
+
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (parenthesized_expr
+    "(" @prepend_empty_softline @prepend_indent_start
+    ")" @append_indent_end
+  )
+  (#multi_line_only!)
+)
+
+; 3rd else-if
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (tuple_expr
+    "(" @prepend_empty_softline @prepend_indent_start
+    ")" @append_indent_end
+  )
+  (#multi_line_only!)
+)
+
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (parenthesized_expr
+    "(" @prepend_empty_softline @prepend_indent_start
+    ")" @append_indent_end
+  )
+  (#multi_line_only!)
+)
+
+; 4th else-if
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (tuple_expr
+    "(" @prepend_empty_softline @prepend_indent_start
+    ")" @append_indent_end
+  )
+  (#multi_line_only!)
+)
+
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
+  (_)
+  "then"
+  .
   (parenthesized_expr
     "(" @prepend_empty_softline @prepend_indent_start
     ")" @append_indent_end
@@ -71,10 +203,29 @@
   (block_comment)
 )
 
-; Close indent before else when body was preceded by comment(s) and directly precedes else.
-; The anchor between body and else is critical to ensure we only match when body . else.
+; Close indent before else when the corresponding then was followed by a comment.
+; We use "then . (comment)" to identify then-branches that opened an indent,
+; then match to the else that should close it.
+;
+; Pattern: then . comment ... body . else
+; The "then . comment" part ensures we're matching a then that opened indent.
+; The "body . else" part ensures we close before the right else.
+; Without anchors between comment and body, this matches any number of comments/bodies
+; between the then-comment and body-else.
+
+; Close indent before else when the then branch had a comment.
+; This pattern ONLY matches the FIRST then (with `. "if"` anchor).
+; Else-if thens with comments are NOT supported for closing; the indent
+; closes at the end of the expression instead, which may result in extra
+; indentation for the else.
+; TODO: Find a way to properly close else-if then-comment indents
 (if_else_expr
+  . "if"
+  (_)
+  "then"
+  .
   (line_comment)
+  .
   [
     (value_expr)
     (number_constant_expr)
@@ -100,8 +251,14 @@
   "else" @prepend_indent_end
 )
 
+; block_comment - first then only
 (if_else_expr
+  . "if"
+  (_)
+  "then"
+  .
   (block_comment)
+  .
   [
     (value_expr)
     (number_constant_expr)
@@ -126,6 +283,112 @@
   .
   "else" @prepend_indent_end
 )
+
+; Multiple comments: then . comment comment . body . else (2 comments) - first then only
+(if_else_expr
+  . "if"
+  (_)
+  "then"
+  .
+  (line_comment)
+  (line_comment)
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
+; 3 comments - first then only
+(if_else_expr
+  . "if"
+  (_)
+  "then"
+  .
+  (line_comment)
+  (line_comment)
+  (line_comment)
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
+; 4 comments - first then only
+(if_else_expr
+  . "if"
+  (_)
+  "then"
+  .
+  (line_comment)
+  (line_comment)
+  (line_comment)
+  (line_comment)
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
 
 ; Close indent from then-let before else that immediately follows let_in_expr
 ; This ONLY applies when "then" is DIRECTLY followed by let_in_expr (no comment).
@@ -379,6 +642,7 @@
   ]
 )
 
+
 ; Final "else" followed by let_in_expr: use newline and indent
 (if_else_expr
   "else" @append_hardline @append_indent_start
@@ -402,7 +666,7 @@
 )
 
 ; Final "else" followed by a comment then other expressions
-; Start indent after else, and end it after the body (before the if's indent_end)
+; Start indent after else, end it after the body
 (if_else_expr
   "else" @append_hardline @append_indent_start
   .
