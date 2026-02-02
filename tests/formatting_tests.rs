@@ -335,12 +335,8 @@ fn test_if_else_chain_let_formatting() {
 }
 
 #[test]
-#[ignore] // Known limitation: else-if then with comments doesn't close indent properly
 fn test_elseif_then_comment_indentation() {
     // Test: else-if chain where the else-if's then branch has a comment
-    // The indent opened by "then . comment" is not closed before the final else,
-    // causing extra indentation for subsequent code.
-    // See TODO in queries/if_indented.scm around line 221
     run_fixture_test("elseif_then_comment");
 }
 

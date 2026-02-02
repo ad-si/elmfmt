@@ -25,11 +25,11 @@ test model error =
               , Cmd.none
               )
 
-isRateLimitError _ =
-  False
 
-is401Error _ =
-  False
+isRateLimitError _ = False
 
-is404Error _ =
-  False
+
+is401Error _ = False
+
+
+is404Error _ = False

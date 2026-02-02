@@ -215,16 +215,13 @@
 
 ; Close indent before else when the then branch had a comment.
 ; This pattern ONLY matches the FIRST then (with `. "if"` anchor).
-; Else-if thens with comments are NOT supported for closing; the indent
-; closes at the end of the expression instead, which may result in extra
-; indentation for the else.
-; TODO: Find a way to properly close else-if then-comment indents
+; Using (line_comment)+ to match one or more comments.
 (if_else_expr
   . "if"
   (_)
   "then"
   .
-  (line_comment)
+  (line_comment)+
   .
   [
     (value_expr)
@@ -257,7 +254,310 @@
   (_)
   "then"
   .
+  (block_comment)+
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
+
+; Close indent before else when an else-if's then was followed by comments.
+; These patterns match else-if branches where then has comments.
+; Using (line_comment)+ to match one or more comments.
+;
+; NOTE: We need patterns for each else-if position (1st, 2nd, 3rd, 4th) because
+; without position-specific prefixes, the pattern could match the wrong "else".
+; The prefix "else" "if" (_) "then" (_) skips past earlier else-if branches.
+;
+; For the 1st else-if, we need to ensure the matched "else" is the final one
+; (not followed by "if"). We do this by requiring "else" to be directly followed
+; by a body expression OR a comment (which indicates a final else, not else-if).
+
+; 1st else-if with line_comments, final else has direct body
+(if_else_expr
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (line_comment)+
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+)
+
+; 1st else-if with line_comments, final else has comment before body
+(if_else_expr
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (line_comment)+
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+  .
+  (line_comment)
+)
+
+; 1st else-if with line_comments, final else has block_comment before body
+(if_else_expr
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (line_comment)+
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+  .
   (block_comment)
+)
+
+; 1st else-if with block_comments, final else has direct body
+(if_else_expr
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (block_comment)+
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+)
+
+; 1st else-if with block_comments, final else has comment before body
+(if_else_expr
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (block_comment)+
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+  .
+  (line_comment)
+)
+
+(if_else_expr
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (block_comment)+
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+  .
+  (block_comment)
+)
+
+; 2nd else-if with line_comments
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (line_comment)+
   .
   [
     (value_expr)
@@ -284,14 +584,15 @@
   "else" @prepend_indent_end
 )
 
-; Multiple comments: then . comment comment . body . else (2 comments) - first then only
+; 2nd else-if with block_comments
 (if_else_expr
-  . "if"
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
   (_)
   "then"
   .
-  (line_comment)
-  (line_comment)
+  (block_comment)+
   .
   [
     (value_expr)
@@ -318,15 +619,16 @@
   "else" @prepend_indent_end
 )
 
-; 3 comments - first then only
+; 3rd else-if with line_comments
 (if_else_expr
-  . "if"
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
   (_)
   "then"
   .
-  (line_comment)
-  (line_comment)
-  (line_comment)
+  (line_comment)+
   .
   [
     (value_expr)
@@ -353,16 +655,90 @@
   "else" @prepend_indent_end
 )
 
-; 4 comments - first then only
+; 3rd else-if with block_comments
 (if_else_expr
-  . "if"
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
   (_)
   "then"
   .
-  (line_comment)
-  (line_comment)
-  (line_comment)
-  (line_comment)
+  (block_comment)+
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
+; 4th else-if with line_comments
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (line_comment)+
+  .
+  [
+    (value_expr)
+    (number_constant_expr)
+    (char_constant_expr)
+    (string_constant_expr)
+    (function_call_expr)
+    (field_access_expr)
+    (operator_as_function_expr)
+    (negate_expr)
+    (bin_op_expr)
+    (parenthesized_expr)
+    (tuple_expr)
+    (list_expr)
+    (record_expr)
+    (case_of_expr)
+    (let_in_expr)
+    (if_else_expr)
+    (anonymous_function_expr)
+    (glsl_code_expr)
+    (unit_expr)
+  ]
+  .
+  "else" @prepend_indent_end
+)
+
+; 4th else-if with block_comments
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  "if"
+  (_)
+  "then"
+  .
+  (block_comment)+
   .
   [
     (value_expr)
@@ -617,6 +993,28 @@
 ; Do NOT close indents before middle "else" - this gives the deeply nested format
 ; where each else stays at the same level as its paired then, and indents accumulate.
 
+; Final else followed by tuple - add indent handling
+; The @prepend_empty_softline expands to newline only if parent tuple_expr is multi-line
+; For single-line tuples, this adds nothing; for multi-line, it adds newline+indent
+; Use @allow_blank_line_before on else to make the pattern match (quirk of Topiary)
+(if_else_expr
+  "else" @allow_blank_line_before
+  .
+  (tuple_expr
+    "(" @prepend_empty_softline @prepend_indent_start
+    ")" @append_indent_end
+  )
+)
+
+(if_else_expr
+  "else" @allow_blank_line_before
+  .
+  (parenthesized_expr
+    "(" @prepend_empty_softline @prepend_indent_start
+    ")" @append_indent_end
+  )
+)
+
 ; Final "else" (not followed by "if"): add space after for simple expressions
 (if_else_expr
   "else" @append_space
@@ -718,3 +1116,5 @@
     (unit_expr)
   ] @append_indent_end
 )
+
+
