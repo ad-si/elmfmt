@@ -84,6 +84,15 @@
   (#delimiter! "\n\n")
 )
 
+; Add blank line after module doc comment (block comment) before imports
+; The block_comment already has @append_hardline, so we only need one extra newline
+(file
+  (block_comment) @append_delimiter
+  .
+  (import_clause)
+  (#delimiter! "\n")
+)
+
 ; ==============================================================================
 ; Imports
 ; ==============================================================================

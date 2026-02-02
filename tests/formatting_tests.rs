@@ -164,6 +164,11 @@ fn test_doc_comment_after_import_formatting() {
     run_fixture_test("doc_comment_after_import");
 }
 
+#[test]
+fn test_module_doc_comment_before_import_formatting() {
+    run_fixture_test("module_doc_comment_before_import");
+}
+
 // ============================================================================
 // Type Tests
 // ============================================================================
