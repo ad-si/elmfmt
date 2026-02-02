@@ -925,6 +925,9 @@
 ; With deeply nested format, we accumulate 2 indents per else-if pair.
 ; Total indents = 1 (first if) + 2 * N (else-if pairs)
 ; We need separate rules for different chain lengths.
+; NOTE: Tree-sitter queries cannot match arbitrary repetitions, so we must
+; enumerate rules for each chain length. Currently supported up to 15 else-if
+; pairs (16 total conditions). If you encounter a longer chain, add more rules.
 
 ; Simple if-then-else (no else-if): close 1 indent
 (if_else_expr
@@ -965,6 +968,193 @@
 
 ; 4 else-if pairs: close 2 more
 (if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 5 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 6 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 7 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 8 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 9 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 10 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 11 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 12 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 13 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 14 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else"
+  (_) @append_indent_end @append_indent_end
+  .
+)
+
+; 15 else-if pairs: close 2 more
+(if_else_expr
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
+  "else" "if" (_) "then" (_)
   "else" "if" (_) "then" (_)
   "else" "if" (_) "then" (_)
   "else" "if" (_) "then" (_)
