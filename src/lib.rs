@@ -1,6 +1,14 @@
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use topiary_core::{formatter, Language, Operation, TopiaryQuery};
+use tree_sitter_language::LanguageFn;
+
+extern "C" {
+    fn tree_sitter_elm() -> *const ();
+}
+
+/// The tree-sitter [`LanguageFn`] for Elm (bundled grammar).
+pub const LANGUAGE: LanguageFn = unsafe { LanguageFn::from_raw(tree_sitter_elm) };
 
 /// The base Elm formatting query file (without if-expression rules)
 const ELM_QUERY_BASE: &str = include_str!("../queries/elm.scm");
@@ -100,7 +108,7 @@ fn build_query(config: &FormatterConfig) -> String {
 
 /// Format Elm code with the given configuration
 pub fn format_elm(content: &str, config: &FormatterConfig) -> Result<String> {
-    let grammar = tree_sitter_elm::LANGUAGE;
+    let grammar = LANGUAGE;
     let query_str = build_query(config);
     let query = TopiaryQuery::new(&grammar.into(), &query_str)
         .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;

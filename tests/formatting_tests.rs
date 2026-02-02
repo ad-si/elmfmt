@@ -1,4 +1,5 @@
 use anyhow::{anyhow, Result};
+use elmfmt::LANGUAGE;
 use std::fs;
 use std::path::PathBuf;
 use topiary_core::{formatter, Language, Operation, TopiaryQuery};
@@ -86,7 +87,7 @@ fn format_elm_full(
     tuple_style: TupleStyle,
     newlines_between_decls: u8,
 ) -> Result<String> {
-    let grammar = tree_sitter_elm::LANGUAGE;
+    let grammar = LANGUAGE;
     let query_str = build_query(if_style, tuple_style, newlines_between_decls);
     let query = TopiaryQuery::new(&grammar.into(), &query_str)
         .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;

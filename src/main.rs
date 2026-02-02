@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
+use elmfmt::LANGUAGE;
 use serde::Deserialize;
 use std::fs;
 use std::io::{self, Read, Write};
@@ -279,7 +280,7 @@ fn main() -> Result<()> {
             let config = Config::load(file.parent())?;
 
             // Set up the language configuration
-            let grammar = tree_sitter_elm::LANGUAGE;
+            let grammar = LANGUAGE;
             let query_str = build_query(&config);
             let query = TopiaryQuery::new(&grammar.into(), &query_str)
                 .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
@@ -336,7 +337,7 @@ fn main() -> Result<()> {
         };
 
         // Set up the language configuration
-        let grammar = tree_sitter_elm::LANGUAGE;
+        let grammar = LANGUAGE;
         let query_str = build_query(&config);
         let query = TopiaryQuery::new(&grammar.into(), &query_str)
             .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
