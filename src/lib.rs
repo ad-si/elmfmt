@@ -2,9 +2,6 @@ use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
 use topiary_core::{formatter, Language, Operation, TopiaryQuery};
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-
 /// The base Elm formatting query file (without if-expression rules)
 const ELM_QUERY_BASE: &str = include_str!("../queries/elm.scm");
 
@@ -29,7 +26,6 @@ const DEFAULT_NEWLINES_BETWEEN_DECLS: u8 = 2;
 /// Style for if-then-else expressions
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub enum IfStyle {
     #[default]
     Indented,
@@ -39,16 +35,14 @@ pub enum IfStyle {
 /// Style for tuple expressions
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub enum TupleStyle {
     Compact,
     #[default]
     Spaced,
 }
 
-/// Configuration for the formatter (WASM-compatible)
+/// Configuration for the formatter
 #[derive(Debug, Deserialize, Serialize, Default, Clone)]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen(getter_with_clone))]
 pub struct FormatterConfig {
     pub indentation: u8,
     pub if_style: IfStyle,
@@ -56,9 +50,7 @@ pub struct FormatterConfig {
     pub newlines_between_decls: u8,
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl FormatterConfig {
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(constructor))]
     pub fn new() -> Self {
         Self {
             indentation: DEFAULT_INDENT_SPACES,
@@ -66,26 +58,6 @@ impl FormatterConfig {
             tuple_style: TupleStyle::default(),
             newlines_between_decls: DEFAULT_NEWLINES_BETWEEN_DECLS,
         }
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(setter))]
-    pub fn set_indentation(&mut self, value: u8) {
-        self.indentation = value;
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(setter))]
-    pub fn set_if_style(&mut self, value: IfStyle) {
-        self.if_style = value;
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(setter))]
-    pub fn set_tuple_style(&mut self, value: TupleStyle) {
-        self.tuple_style = value;
-    }
-
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(setter))]
-    pub fn set_newlines_between_decls(&mut self, value: u8) {
-        self.newlines_between_decls = value;
     }
 }
 
@@ -143,33 +115,6 @@ pub fn format_elm(content: &str, config: &FormatterConfig) -> Result<String> {
         .map_err(|e| anyhow!("Failed to format Elm code: {:?}", e))?;
 
     String::from_utf8(output).map_err(|e| anyhow!("Formatter produced invalid UTF-8: {}", e))
-}
-
-/// Result type for WASM API
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(getter_with_clone)]
-pub struct FormatResult {
-    pub success: bool,
-    pub output: String,
-    pub error: String,
-}
-
-/// WASM entry point for formatting Elm code
-#[cfg(target_arch = "wasm32")]
-#[wasm_bindgen]
-pub fn format(code: &str, config: &FormatterConfig) -> FormatResult {
-    match format_elm(code, config) {
-        Ok(formatted) => FormatResult {
-            success: true,
-            output: formatted,
-            error: String::new(),
-        },
-        Err(e) => FormatResult {
-            success: false,
-            output: String::new(),
-            error: e.to_string(),
-        },
-    }
 }
 
 #[cfg(test)]
