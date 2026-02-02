@@ -7,6 +7,13 @@ license = "ISC"
 repository = "https://github.com/ad-si/elmfmt"
 keywords = ["elm", "formatter", "topiary"]
 categories = ["command-line-utilities", "development-tools"]
+include = [
+    "/src/",
+    "/queries/",
+    "/tree-sitter-elm/src/",
+    "/build.rs",
+    "/README.md",
+]
 
 [dependencies]
 topiary-core = "0.6"
