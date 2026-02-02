@@ -380,6 +380,15 @@
   (_)
 )
 
+; Record type as type argument: when multiline, break to new line with indentation
+; This handles: Maybe { field : Type, ... } -> Maybe\n  { field : Type\n  , ...\n  }
+(type_ref
+  (upper_case_qid)
+  .
+  (record_type) @prepend_spaced_softline @prepend_indent_start @append_indent_end
+  .
+)
+
 ; Space after ) when followed by another type argument
 (type_ref
   ")" @append_space
@@ -951,8 +960,26 @@
   "," @prepend_empty_softline @append_space
 )
 
+; Field types in records: space around colon
+; The spaced_softline becomes a newline if field_type is multiline
+; Start double indent after colon so type expression is indented 2 levels when on new line
+; (elm-format uses 2 indent levels for continuation after colon in record fields)
 (field_type
-  (colon) @prepend_space @append_space
+  (colon) @prepend_space @append_spaced_softline @append_indent_start
+)
+
+; Second indent level for field type continuation
+(field_type
+  (colon) @append_indent_start
+)
+
+; End both indent levels after type expression in field types
+(field_type
+  (type_expression) @append_indent_end
+)
+
+(field_type
+  (type_expression) @append_indent_end
 )
 
 ; ==============================================================================

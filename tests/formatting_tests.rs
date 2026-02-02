@@ -237,6 +237,16 @@ fn test_record_type_multiline_formatting() {
 }
 
 #[test]
+fn test_let_record_type_annotation_formatting() {
+    run_fixture_test("let_record_type_annotation");
+}
+
+#[test]
+fn test_nested_record_type_formatting() {
+    run_fixture_test("nested_record_type");
+}
+
+#[test]
 fn test_list_formatting() {
     run_fixture_test("list");
 }
