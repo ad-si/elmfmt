@@ -11,6 +11,12 @@
   ")" @prepend_space
 )
 
+; Tuple types: ( Property, Value )
+(tuple_type
+  "(" @append_space
+  ")" @prepend_space
+)
+
 (tuple_expr
   "(" @append_space
   ")" @prepend_spaced_softline

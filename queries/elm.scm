@@ -1070,21 +1070,14 @@
 ; Tuples
 ; ==============================================================================
 
-; NOTE: Tuple expression formatting is handled by separate query files based on
-; the configured tuple-style (spaced or compact). The rules are combined at
-; runtime from queries/tuple_spaced.scm or queries/tuple_compact.scm.
-
-; Tuple types always use compact style (no spaces): (Int, String)
-(tuple_type
-  "(" @append_antispace
-  ")" @prepend_antispace
-)
+; NOTE: Tuple expression, tuple type, and tuple pattern formatting is handled
+; by separate query files based on the configured tuple-style (spaced or compact).
+; The rules are combined at runtime from queries/tuple_spaced.scm or
+; queries/tuple_compact.scm.
 
 (tuple_type
   "," @append_space
 )
-
-; Tuple pattern spacing is controlled by tuple_spaced.scm / tuple_compact.scm
 
 ; ==============================================================================
 ; Parenthesized expressions

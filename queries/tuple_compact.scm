@@ -11,6 +11,12 @@
   ")" @prepend_antispace
 )
 
+; Tuple types: (Property, Value)
+(tuple_type
+  "(" @append_antispace
+  ")" @prepend_antispace
+)
+
 ; Multi-line formatting: space after (, closing ) on its own line
 (tuple_expr
   "(" @append_space

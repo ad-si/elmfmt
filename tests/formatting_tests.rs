@@ -954,6 +954,40 @@ pair = ( 1, 2 )
 }
 
 #[test]
+fn test_tuple_type_follows_tuple_style() {
+    // Tuple types in type aliases should follow the tuple-style setting
+    let input = r#"module Main exposing (Declaration)
+
+
+type alias Declaration =
+    (Property, Value)
+"#;
+
+    // Test spaced style (default)
+    let result = format_elm_with_tuple_style(input, TupleStyle::Spaced);
+    assert!(result.is_ok(), "Should format tuple type with spaced style");
+    let formatted = result.unwrap();
+    assert!(
+        formatted.contains("( Property, Value )"),
+        "Spaced style should have spaces inside tuple type parentheses, got:\n{}",
+        formatted
+    );
+
+    // Test compact style
+    let result = format_elm_with_tuple_style(input, TupleStyle::Compact);
+    assert!(
+        result.is_ok(),
+        "Should format tuple type with compact style"
+    );
+    let formatted = result.unwrap();
+    assert!(
+        formatted.contains("(Property, Value)"),
+        "Compact style should have no spaces inside tuple type parentheses, got:\n{}",
+        formatted
+    );
+}
+
+#[test]
 fn test_function_call_paren_same_line_as_content() {
     // When a function call has a parenthesized argument with a pipe expression,
     // the opening paren should have the first expression on the same line,
