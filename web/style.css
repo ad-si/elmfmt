@@ -1,0 +1,309 @@
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-tertiary: #0f3460;
+    --text-primary: #eaeaea;
+    --text-secondary: #a0a0a0;
+    --accent: #e94560;
+    --accent-hover: #ff6b6b;
+    --success: #4ecca3;
+    --error: #ff6b6b;
+    --border: #2a2a4a;
+    --code-bg: #0d1117;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.25rem;
+}
+
+header .subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+main {
+    flex: 1;
+    padding: 1.5rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.editor-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+    .editor-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.editor-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border);
+}
+
+.panel-header h2 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+}
+
+textarea {
+    flex: 1;
+    min-height: 400px;
+    padding: 1rem;
+    border: none;
+    background: var(--code-bg);
+    color: var(--text-primary);
+    font-family: 'Fira Code', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+}
+
+textarea::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+textarea:focus {
+    background: #0f1419;
+}
+
+#output {
+    background: var(--code-bg);
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+}
+
+.btn-secondary:hover {
+    background: var(--border);
+}
+
+.settings-panel {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+}
+
+.settings-panel h2 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.setting {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.setting label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.setting input,
+.setting select {
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.setting input:focus,
+.setting select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.setting input[type="number"] {
+    width: 80px;
+}
+
+.style-examples {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+.example {
+    background: var(--code-bg);
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.example h3 {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.example pre {
+    font-family: 'Fira Code', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    white-space: pre;
+    margin: 0;
+}
+
+.error-container {
+    background: rgba(255, 107, 107, 0.1);
+    border: 1px solid var(--error);
+    border-radius: 6px;
+    padding: 1rem;
+    color: var(--error);
+    margin-bottom: 1rem;
+}
+
+.error-container.hidden {
+    display: none;
+}
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 2rem;
+    color: var(--text-secondary);
+}
+
+.loading.hidden {
+    display: none;
+}
+
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+footer {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+footer a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+footer .separator {
+    margin: 0 0.5rem;
+    opacity: 0.5;
+}
+
+/* Copy button feedback */
+.btn-secondary.copied {
+    background: var(--success);
+    color: var(--bg-primary);
+    border-color: var(--success);
+}
