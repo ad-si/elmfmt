@@ -71,6 +71,12 @@ impl FormatterConfig {
     fn decl_delimiter(&self) -> String {
         "\\n".repeat((self.newlines_between_decls + 1) as usize)
     }
+
+    /// Get the delimiter string for section comments (one less newline than decl_delimiter,
+    /// since line_comment already has @append_hardline adding one newline)
+    fn section_comment_delimiter(&self) -> String {
+        "\\n".repeat(self.newlines_between_decls as usize)
+    }
 }
 
 fn build_query(config: &FormatterConfig) -> String {
@@ -86,7 +92,10 @@ fn build_query(config: &FormatterConfig) -> String {
 
     // Replace the placeholder with the configured delimiter for declaration spacing
     let decl_delimiter = config.decl_delimiter();
-    base_query.replace("__DECL_DELIMITER__", &decl_delimiter)
+    let section_comment_delimiter = config.section_comment_delimiter();
+    base_query
+        .replace("__DECL_DELIMITER__", &decl_delimiter)
+        .replace("__SECTION_COMMENT_DELIMITER__", &section_comment_delimiter)
 }
 
 /// Format Elm code with the given configuration

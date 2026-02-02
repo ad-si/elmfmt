@@ -35,7 +35,11 @@ fn build_query(if_style: IfStyle, tuple_style: TupleStyle, newlines_between_decl
     // Replace the placeholder with the configured delimiter for declaration spacing
     // The config value represents blank lines, so we add 1 for the line-ending newline.
     let decl_delimiter = "\\n".repeat((newlines_between_decls + 1) as usize);
-    base_query.replace("__DECL_DELIMITER__", &decl_delimiter)
+    // Section comment delimiter is one less newline since line_comment already has @append_hardline
+    let section_comment_delimiter = "\\n".repeat(newlines_between_decls as usize);
+    base_query
+        .replace("__DECL_DELIMITER__", &decl_delimiter)
+        .replace("__SECTION_COMMENT_DELIMITER__", &section_comment_delimiter)
 }
 
 /// Standard test configuration: 2-space indent, indented if-style, compact tuple-style
@@ -1198,4 +1202,11 @@ update msg ({ testReporter } as model) = msg
         "Pattern with 'as' should have proper spacing, got:\n{}",
         formatted
     );
+}
+
+#[test]
+fn test_section_comment_formatting() {
+    // Section comments (like "-- MAIN") should preserve blank lines
+    // around them when the input has blank lines
+    run_fixture_test("section_comment");
 }

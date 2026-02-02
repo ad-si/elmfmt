@@ -144,6 +144,42 @@
   (#delimiter! "__DECL_DELIMITER__")
 )
 
+; Blank line after all imports before line comments (e.g., section comments)
+(
+  (import_clause) @append_delimiter
+  .
+  (line_comment)
+  (#delimiter! "__DECL_DELIMITER__")
+)
+
+; Preserve blank lines after top-level line comments before declarations
+; Note: This rule allows preserving blank lines from input for regular comments.
+; Section header comments after imports are handled by the rule below.
+(file
+  (line_comment)
+  .
+  [
+    (value_declaration)
+    (type_declaration)
+    (type_alias_declaration)
+    (port_annotation)
+  ] @allow_blank_line_before
+)
+
+; Section header comments after imports get proper spacing.
+; The line_comment already has @append_hardline adding one newline,
+; so we add __SECTION_COMMENT_DELIMITER__ (newlines_between_decls newlines) to get
+; the total spacing matching the configured newlines_between_decls + 1 blank lines.
+; This rule is specifically for line_comment followed by type_annotation at file level.
+(file
+  (line_comment) @append_delimiter
+  .
+  (type_annotation)
+  (#delimiter! "__SECTION_COMMENT_DELIMITER__")
+)
+
+
+
 ; ==============================================================================
 ; Exposing lists
 ; ==============================================================================

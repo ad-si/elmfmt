@@ -118,6 +118,15 @@ impl Config {
             .unwrap_or(DEFAULT_NEWLINES_BETWEEN_DECLS);
         "\\n".repeat((blank_lines + 1) as usize)
     }
+
+    /// Get the delimiter string for section comments (one less newline than decl_delimiter,
+    /// since line_comment already has @append_hardline adding one newline)
+    fn section_comment_delimiter(&self) -> String {
+        let blank_lines = self
+            .newlines_between_decls
+            .unwrap_or(DEFAULT_NEWLINES_BETWEEN_DECLS);
+        "\\n".repeat(blank_lines as usize)
+    }
 }
 
 /// A formatter for Elm code, powered by Topiary
@@ -186,7 +195,10 @@ fn build_query(config: &Config) -> String {
 
     // Replace the placeholder with the configured delimiter for declaration spacing
     let decl_delimiter = config.decl_delimiter();
-    base_query.replace("__DECL_DELIMITER__", &decl_delimiter)
+    let section_comment_delimiter = config.section_comment_delimiter();
+    base_query
+        .replace("__DECL_DELIMITER__", &decl_delimiter)
+        .replace("__SECTION_COMMENT_DELIMITER__", &section_comment_delimiter)
 }
 
 /// Find all .elm files in a directory recursively
