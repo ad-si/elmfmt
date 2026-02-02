@@ -1,0 +1,7 @@
+- You can find the documentation for Topiary in @topiary-docs.
+- Run `make test` after making any changes to ensure the code still works.
+- Do not run one-off tests manually; instead, add them to the test suite.
+- If you find a bug, immediately add a failing test for it. You can also skip it temporarily if you want to tackle it later.
+- Do not try to write files to `/tmp` as you don't have the permissions. Create a local temporary directory instead.
+- If you find any inconsistencies in the expected output, ask me how to format it correctly.
+- This project is not related to `elm-format` and it does not matter how `elm-format` would format the code.
