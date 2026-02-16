@@ -21,9 +21,10 @@ mobileNavigation =
         menuEntries
           |> List.concat
           |> List.findMap
-              (\(title, route) -> if route == routeWithDefault
-                  then Just title
-                  else Nothing
+              (\(title, route) ->
+                  if route == routeWithDefault
+                    then Just title
+                    else Nothing
               )
           |> Maybe.withDefault ""
     , attributes = []

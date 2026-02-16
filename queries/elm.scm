@@ -78,6 +78,12 @@
   (port) @append_space
 )
 
+; effect module Task where { command = MyCmd } exposing (..)
+(module_declaration
+  (effect) @append_space
+  (where) @prepend_space @append_space
+)
+
 ; Add blank line after module declaration
 (file
   (module_declaration) @append_delimiter
@@ -760,6 +766,20 @@
   (let_in_expr) @append_indent_end
 )
 
+; When lambda body is an if expression, put it on its own line with indent
+; since if-then-else always expands to multi-line (then/else use hardline).
+; Use @append_hardline (not softline) because the if will always be multi-line,
+; and we need to force the line break before Topiary processes the if's hardlines.
+; \x ->
+;     if condition
+;       then expr1
+;       else expr2
+(anonymous_function_expr
+  (arrow) @append_hardline @append_indent_start
+  .
+  (if_else_expr) @append_indent_end
+)
+
 
 ; ==============================================================================
 ; Function calls
@@ -772,6 +792,107 @@
   (_) @append_spaced_softline
   .
   (_)
+)
+
+; When a function call argument is a lambda with an always-multi-line body
+; (if_else_expr, let_in_expr, case_of_expr), force the function call to break
+; onto multiple lines. Without this, the softline between args would stay as a
+; space on the first formatting pass (since the function_call_expr isn't yet
+; multi-line in the input), causing an idempotence failure.
+;
+; Direct lambda argument (no parens)
+(function_call_expr
+  (anonymous_function_expr
+    (arrow)
+    .
+    (if_else_expr)
+  ) @append_hardline
+  .
+  (_)
+)
+
+(function_call_expr
+  (anonymous_function_expr
+    (arrow)
+    .
+    (let_in_expr)
+  ) @append_hardline
+  .
+  (_)
+)
+
+(function_call_expr
+  (anonymous_function_expr
+    (arrow)
+    .
+    (case_of_expr)
+  ) @append_hardline
+  .
+  (_)
+)
+
+; Lambda wrapped in parentheses as function call argument.
+; Force hardline before, after, and between all subsequent args,
+; since the lambda will always be multi-line but the function_call_expr
+; doesn't know this on the first pass.
+;
+; Hardline before the paren-lambda (between function name and it)
+(function_call_expr
+  (_) @append_hardline
+  .
+  (parenthesized_expr
+    (anonymous_function_expr
+      (arrow)
+      .
+      [(if_else_expr) (let_in_expr) (case_of_expr)]
+    )
+  )
+)
+
+; Hardline after the paren-lambda (between it and next arg)
+(function_call_expr
+  (parenthesized_expr
+    (anonymous_function_expr
+      (arrow)
+      .
+      [(if_else_expr) (let_in_expr) (case_of_expr)]
+    )
+  ) @append_hardline
+  .
+  (_)
+)
+
+; Hardlines between args that follow the paren-wrapped lambda
+(function_call_expr
+  (parenthesized_expr
+    (anonymous_function_expr
+      (arrow)
+      .
+      [(if_else_expr) (let_in_expr) (case_of_expr)]
+    )
+  )
+  (_) @append_hardline
+  .
+  (_)
+)
+
+; When a function call's argument is a parenthesized expression containing
+; a function call with a paren-wrapped always-multi-line lambda, force the
+; outer function call to break too: f (g (\x -> if ...) y z) => f\n  (g ...)
+(function_call_expr
+  (_) @append_hardline
+  .
+  (parenthesized_expr
+    (function_call_expr
+      (parenthesized_expr
+        (anonymous_function_expr
+          (arrow)
+          .
+          [(if_else_expr) (let_in_expr) (case_of_expr)]
+        )
+      )
+    )
+  )
 )
 
 ; Indent the arguments when multi-line
@@ -1138,6 +1259,36 @@
   (#single_line_only!)
 )
 
+; When parenthesized_expr contains a lambda with an always-multi-line body,
+; force the closing ) onto its own line for idempotence.
+; Without this, on the first pass the paren appears single-line and the
+; empty_softline for ) stays as nothing, but on the second pass it would expand.
+(parenthesized_expr
+  (anonymous_function_expr
+    (arrow)
+    .
+    [(if_else_expr) (let_in_expr) (case_of_expr)]
+  )
+  ")" @prepend_hardline
+)
+
+; When parenthesized_expr contains a function_call_expr that has a
+; paren-wrapped lambda with always-multi-line body, force ) on own line.
+; This handles: fromList (foldr (\x -> if ...) [] array)
+; where the outer paren wrapping `foldr ...` needs to break.
+(parenthesized_expr
+  (function_call_expr
+    (parenthesized_expr
+      (anonymous_function_expr
+        (arrow)
+        .
+        [(if_else_expr) (let_in_expr) (case_of_expr)]
+      )
+    )
+  )
+  ")" @prepend_hardline
+)
+
 ; ==============================================================================
 ; Patterns
 ; ==============================================================================
@@ -1233,8 +1384,57 @@
 ; Infix declarations
 ; ==============================================================================
 
+; infix right 0 (<|) = apL
 (infix_declaration
   (infix) @append_space
+  (lower_case_identifier) @append_space
+  (number_literal) @append_space
+  (eq) @prepend_space @append_space
+)
+
+; Newlines between consecutive infix declarations
+(
+  (infix_declaration) @append_hardline
+  .
+  (infix_declaration)
+)
+
+; Blank line after last infix declaration before other declarations/comments
+(
+  (infix_declaration) @append_delimiter
+  .
+  [
+    (value_declaration)
+    (type_annotation)
+    (type_declaration)
+    (type_alias_declaration)
+    (port_annotation)
+    (line_comment)
+    (block_comment)
+  ]
+  (#delimiter! "__DECL_DELIMITER__")
+)
+
+; Blank line before infix declarations after other declarations/comments
+(
+  [
+    (value_declaration)
+    (type_declaration)
+    (type_alias_declaration)
+    (port_annotation)
+    (block_comment)
+  ] @append_delimiter
+  .
+  (infix_declaration)
+  (#delimiter! "__DECL_DELIMITER__")
+)
+
+; Blank line after imports before infix declarations
+(
+  (import_clause) @append_delimiter
+  .
+  (infix_declaration)
+  (#delimiter! "__DECL_DELIMITER__")
 )
 
 ; ==============================================================================

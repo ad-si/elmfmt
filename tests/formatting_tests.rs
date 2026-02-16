@@ -1211,3 +1211,20 @@ fn test_section_comment_formatting() {
     // around them when the input has blank lines
     run_fixture_test("section_comment");
 }
+
+#[test]
+fn test_func_call_with_if_in_lambda() {
+    // A function call containing a lambda with an if-then-else should be
+    // idempotent: the if expansion should force the outer call to break too.
+    run_fixture_test("func_call_with_if_in_lambda");
+}
+
+#[test]
+fn test_infix_declaration_formatting() {
+    run_fixture_test("infix_declaration");
+}
+
+#[test]
+fn test_effect_module_formatting() {
+    run_fixture_test("effect_module");
+}

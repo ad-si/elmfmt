@@ -274,16 +274,31 @@ fn main() -> Result<()> {
         files.dedup();
 
         let mut needs_formatting = false;
+        let mut errors: Vec<(PathBuf, anyhow::Error)> = Vec::new();
 
         for file in &files {
             // Load configuration for each file (may differ by directory)
-            let config = Config::load(file.parent())?;
+            let config = match Config::load(file.parent()) {
+                Ok(c) => c,
+                Err(e) => {
+                    errors.push((file.clone(), e));
+                    continue;
+                }
+            };
 
             // Set up the language configuration
             let grammar = LANGUAGE;
             let query_str = build_query(&config);
-            let query = TopiaryQuery::new(&grammar.into(), &query_str)
-                .map_err(|e| anyhow!("Failed to parse Elm formatting query: {:?}", e))?;
+            let query = match TopiaryQuery::new(&grammar.into(), &query_str) {
+                Ok(q) => q,
+                Err(e) => {
+                    errors.push((
+                        file.clone(),
+                        anyhow!("Failed to parse Elm formatting query: {:?}", e),
+                    ));
+                    continue;
+                }
+            };
             let language = Language {
                 name: "elm".to_string(),
                 query,
@@ -291,11 +306,28 @@ fn main() -> Result<()> {
                 indent: Some(config.indent_string()),
             };
 
-            let content = fs::read_to_string(file)
-                .with_context(|| format!("Failed to read file: {}", file.display()))?;
+            let content = match fs::read_to_string(file) {
+                Ok(c) => c,
+                Err(e) => {
+                    errors.push((
+                        file.clone(),
+                        anyhow::Error::new(e)
+                            .context(format!("Failed to read file: {}", file.display())),
+                    ));
+                    continue;
+                }
+            };
 
-            let formatted = format_content(&content, &language, args.skip_idempotence)
-                .with_context(|| format!("Failed to format: {}", file.display()))?;
+            let formatted = match format_content(&content, &language, args.skip_idempotence) {
+                Ok(f) => f,
+                Err(e) => {
+                    errors.push((
+                        file.clone(),
+                        e.context(format!("Failed to format: {}", file.display())),
+                    ));
+                    continue;
+                }
+            };
 
             if args.check {
                 if formatted != content {
@@ -303,10 +335,26 @@ fn main() -> Result<()> {
                     needs_formatting = true;
                 }
             } else if args.in_place && formatted != content {
-                fs::write(file, &formatted)
-                    .with_context(|| format!("Failed to write file: {}", file.display()))?;
+                if let Err(e) = fs::write(file, &formatted) {
+                    errors.push((
+                        file.clone(),
+                        anyhow::Error::new(e)
+                            .context(format!("Failed to write file: {}", file.display())),
+                    ));
+                    continue;
+                }
                 eprintln!("Formatted: {}", file.display());
             }
+        }
+
+        if !errors.is_empty() {
+            eprintln!();
+            for (file, err) in &errors {
+                eprintln!("Error: {}: {:#}", file.display(), err);
+            }
+            eprintln!();
+            eprintln!("{} file(s) failed to format", errors.len());
+            std::process::exit(1);
         }
 
         if args.check && needs_formatting {
