@@ -2,6 +2,37 @@
 
 A code formatter for the [Elm](https://elm-lang.org/) programming language, built on [Topiary](https://topiary.tweag.io/).
 
+
+## Example
+
+Following Elm code was formatted with elmfmt's default settings:
+
+```elm
+module Main exposing (main)
+
+import Html exposing (Html, text, div, button)
+import Html.Events exposing (onClick)
+
+
+type Msg = Increment | Decrement
+
+
+update msg model =
+  case msg of
+    Increment -> model + 1
+    Decrement -> model - 1
+
+
+view model =
+  div
+    [ style "font-size" "2rem" ]
+    [ button [ onClick Decrement ] [ text "-" ]
+    , div [] [ text (String.fromInt model) ]
+    , button [ onClick Increment ] [ text "+" ]
+    ]
+```
+
+
 ## Installation
 
 ### From crates.io
