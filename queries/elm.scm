@@ -1003,6 +1003,17 @@
   )
 )
 
+; Same as above, but for when the RHS is a direct parenthesized always-multi-line
+; expression (not wrapped in a function_call_expr).
+; Example: (if a then 1 else 0) - (if b then 1 else 0)
+(bin_op_expr
+  (operator) @prepend_hardline
+  .
+  (parenthesized_expr
+    [(if_else_expr) (let_in_expr) (case_of_expr)]
+  )
+)
+
 
 ; Indent forward pipe chains - add indent before the pipe, end after its operand
 ; For function calls, the pipe indent and function arg indent both apply,

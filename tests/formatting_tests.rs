@@ -301,6 +301,14 @@ fn test_parenthesized_binop_formatting() {
 }
 
 #[test]
+fn test_binop_paren_if() {
+    // Binary operator where both operands are parenthesized if expressions.
+    // The operator should be forced to a new line for idempotence since
+    // the parenthesized if always expands to multi-line.
+    run_fixture_test("binop_paren_if");
+}
+
+#[test]
 fn test_pipe_let_binding_formatting() {
     run_fixture_test("pipe_let_binding");
 }
@@ -392,6 +400,7 @@ fn test_formatting_is_idempotent() {
         "type_alias",
         "record_field_if",
         "func_call_multiarg_paren_if",
+        "binop_paren_if",
     ];
 
     for name in test_cases {
