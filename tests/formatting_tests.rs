@@ -1267,3 +1267,11 @@ fn test_func_call_multiarg_paren_if() {
     // if expressions in then-branches.
     run_fixture_test("func_call_multiarg_paren_if");
 }
+
+#[test]
+fn test_block_comment_in_func_call() {
+    // Function calls with inline block comments between arguments should break
+    // all args onto separate lines for idempotence, since block comments get
+    // @append_hardline. Also tests binary operators with such function calls.
+    run_fixture_test("block_comment_in_func_call");
+}

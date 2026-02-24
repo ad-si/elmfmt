@@ -947,6 +947,40 @@
   )
 )
 
+; Block comments inside function calls have @append_hardline, which forces
+; the call to be multi-line on the second pass. Force hardlines between ALL
+; children on the first pass too, to ensure idempotence.
+;
+; Pairs before the block_comment
+(function_call_expr
+  (_) @append_hardline
+  .
+  (_)
+  (block_comment)
+)
+
+; Node just before block_comment
+(function_call_expr
+  (_) @append_hardline
+  .
+  (block_comment)
+)
+
+; Block_comment to next node
+(function_call_expr
+  (block_comment) @append_hardline
+  .
+  (_)
+)
+
+; Pairs after the block_comment
+(function_call_expr
+  (block_comment)
+  (_) @append_hardline
+  .
+  (_)
+)
+
 ; Indent the arguments when multi-line
 ; Start indent after the first child (the function being called)
 (function_call_expr
@@ -1011,6 +1045,27 @@
   .
   (parenthesized_expr
     [(if_else_expr) (let_in_expr) (case_of_expr)]
+  )
+)
+
+; When a bin_op_expr operand is a function_call_expr containing a block_comment,
+; the function call will be multi-line (block comments get @append_hardline),
+; so force hardline before the operator for idempotence.
+;
+; Block comment in LHS function_call_expr
+(bin_op_expr
+  (function_call_expr
+    (block_comment)
+  )
+  (operator) @prepend_hardline
+)
+
+; Block comment in RHS function_call_expr
+(bin_op_expr
+  (operator) @prepend_hardline
+  .
+  (function_call_expr
+    (block_comment)
   )
 )
 
