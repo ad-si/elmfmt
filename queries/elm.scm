@@ -591,6 +591,26 @@
   .
 )
 
+; Always-multi-line expressions in value declarations: use hardline after =
+; since if/let/case always expand to multi-line (they contain hardlines),
+; we need hardline here for idempotence — spaced_softline would produce a space
+; on the first pass (parent looks single-line) then a newline on the second.
+(value_declaration
+  (eq)
+  .
+  (if_else_expr) @prepend_hardline
+)
+(value_declaration
+  (eq)
+  .
+  (let_in_expr) @prepend_hardline
+)
+(value_declaration
+  (eq)
+  .
+  (case_of_expr) @prepend_hardline
+)
+
 ; ==============================================================================
 ; Let expressions
 ; ==============================================================================
@@ -832,11 +852,24 @@
 )
 
 ; Parenthesized always-multi-line expression as function call argument.
-; Force hardline before, after, and between all subsequent args,
+; Force hardline before, after, and between all args,
 ; since the content will always be multi-line but the function_call_expr
 ; doesn't know this on the first pass.
 ;
 ; Direct always-multi-line content in parens: f (if ...), f (let ...), f (case ...)
+; Force hardlines between ALL consecutive children when any child is a
+; parenthesized always-multi-line expression (not just the one adjacent to it),
+; otherwise intermediate args stay on the same line as the function name on the
+; first pass but break on the second.
+(function_call_expr
+  (_) @append_hardline
+  .
+  (_)
+  (parenthesized_expr
+    [(if_else_expr) (let_in_expr) (case_of_expr)]
+  )
+)
+
 (function_call_expr
   (_) @append_hardline
   .
@@ -954,6 +987,20 @@
 (bin_op_expr
   (operator) @prepend_spaced_softline
   (#not-match? @prepend_spaced_softline "^(<\\||\\|>)$")
+)
+
+; When a bin_op_expr has a function_call_expr operand containing a parenthesized
+; always-multi-line expression, force hardline before operator for idempotence.
+; Without this, the softline resolves as a space on the first pass (bin_op_expr
+; looks single-line) but as a newline on the second (function call expanded it).
+(bin_op_expr
+  (operator) @prepend_hardline
+  .
+  (function_call_expr
+    (parenthesized_expr
+      [(if_else_expr) (let_in_expr) (case_of_expr)]
+    )
+  )
 )
 
 

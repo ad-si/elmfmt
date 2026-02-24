@@ -391,6 +391,7 @@ fn test_formatting_is_idempotent() {
         "anonymous_function",
         "type_alias",
         "record_field_if",
+        "func_call_multiarg_paren_if",
     ];
 
     for name in test_cases {
@@ -1240,4 +1241,20 @@ fn test_paren_if_in_func_call() {
     // A function call with a parenthesized if-then-else should be idempotent:
     // the if expansion should force the outer call to break too.
     run_fixture_test("paren_if_in_func_call");
+}
+
+#[test]
+fn test_let_binding_if_formatting() {
+    // If expression as a let binding value should be on a new line after =
+    // since if-then-else always expands to multi-line (idempotence fix)
+    run_fixture_test("let_binding_if");
+}
+
+#[test]
+fn test_func_call_multiarg_paren_if() {
+    // Function calls with multiple args where one is a parenthesized if/let/case
+    // should break ALL args onto separate lines for idempotence. Also tests
+    // binary operators with function calls containing paren if, and parenthesized
+    // if expressions in then-branches.
+    run_fixture_test("func_call_multiarg_paren_if");
 }

@@ -36,13 +36,32 @@
   (let_in_expr)
 )
 
-; When a multi-line tuple or parenthesized expr follows then DIRECTLY, add newline and indent
+; When a parenthesized expr after "then" contains an always-multi-line expression
+; (if/let/case), force newline+indent unconditionally for idempotence.
+; Without this, #multi_line_only! fails on the first pass when the input is
+; single-line, but the inner if/let/case expands to multi-line, causing the
+; second pass to produce a different result.
+; Note: we intentionally do NOT have #multi_line_only! parenthesized_expr rules
+; because they would stack with this unconditional rule on the second pass.
+; For non-always-multi-line parenthesized content, the general paren rules in
+; elm.scm provide adequate formatting.
+(if_else_expr
+  "then" @append_antispace
+  .
+  (parenthesized_expr
+    "(" @prepend_hardline @prepend_indent_start
+    [(if_else_expr) (let_in_expr) (case_of_expr)]
+    ")" @append_indent_end
+  )
+)
+
+; When a multi-line tuple follows then DIRECTLY, add newline and indent.
 ; We detect multi-line using #multi_line_only! which checks if the matched nodes span
 ; multiple lines in the input.
 ;
 ; We need separate patterns for the first "then" (using . "if" anchor) and else-if "then"s.
 ; The anchor (.) ensures this only matches when then is directly followed by the
-; tuple/parenthesized expr, not when there are comments in between.
+; tuple, not when there are comments in between.
 
 ; First then (after initial "if")
 (if_else_expr
@@ -51,18 +70,6 @@
   "then"
   .
   (tuple_expr
-    "(" @prepend_empty_softline @prepend_indent_start
-    ")" @append_indent_end
-  )
-  (#multi_line_only!)
-)
-
-(if_else_expr
-  . "if"
-  (_)
-  "then"
-  .
-  (parenthesized_expr
     "(" @prepend_empty_softline @prepend_indent_start
     ")" @append_indent_end
   )
@@ -83,19 +90,6 @@
   (#multi_line_only!)
 )
 
-(if_else_expr
-  "else"
-  "if"
-  (_)
-  "then"
-  .
-  (parenthesized_expr
-    "(" @prepend_empty_softline @prepend_indent_start
-    ")" @append_indent_end
-  )
-  (#multi_line_only!)
-)
-
 ; 2nd else-if
 (if_else_expr
   "else" "if" (_) "then" (_)
@@ -105,20 +99,6 @@
   "then"
   .
   (tuple_expr
-    "(" @prepend_empty_softline @prepend_indent_start
-    ")" @append_indent_end
-  )
-  (#multi_line_only!)
-)
-
-(if_else_expr
-  "else" "if" (_) "then" (_)
-  "else"
-  "if"
-  (_)
-  "then"
-  .
-  (parenthesized_expr
     "(" @prepend_empty_softline @prepend_indent_start
     ")" @append_indent_end
   )
@@ -141,21 +121,6 @@
   (#multi_line_only!)
 )
 
-(if_else_expr
-  "else" "if" (_) "then" (_)
-  "else" "if" (_) "then" (_)
-  "else"
-  "if"
-  (_)
-  "then"
-  .
-  (parenthesized_expr
-    "(" @prepend_empty_softline @prepend_indent_start
-    ")" @append_indent_end
-  )
-  (#multi_line_only!)
-)
-
 ; 4th else-if
 (if_else_expr
   "else" "if" (_) "then" (_)
@@ -167,22 +132,6 @@
   "then"
   .
   (tuple_expr
-    "(" @prepend_empty_softline @prepend_indent_start
-    ")" @append_indent_end
-  )
-  (#multi_line_only!)
-)
-
-(if_else_expr
-  "else" "if" (_) "then" (_)
-  "else" "if" (_) "then" (_)
-  "else" "if" (_) "then" (_)
-  "else"
-  "if"
-  (_)
-  "then"
-  .
-  (parenthesized_expr
     "(" @prepend_empty_softline @prepend_indent_start
     ")" @append_indent_end
   )
