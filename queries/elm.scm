@@ -611,6 +611,20 @@
   (case_of_expr) @prepend_hardline
 )
 
+; When the RHS of = is a bin_op_expr containing a parenthesized always-multi-line
+; expression, force hardline after = for idempotence. The parenthesized if/let/case
+; will expand to multi-line, making the bin_op_expr multi-line, which on a second
+; pass would turn the spaced_softline after = into a newline.
+(value_declaration
+  (eq)
+  .
+  (bin_op_expr
+    (parenthesized_expr
+      [(if_else_expr) (let_in_expr) (case_of_expr)]
+    )
+  ) @prepend_hardline
+)
+
 ; ==============================================================================
 ; Let expressions
 ; ==============================================================================
@@ -1046,6 +1060,16 @@
   (parenthesized_expr
     [(if_else_expr) (let_in_expr) (case_of_expr)]
   )
+)
+
+; When the LHS is a direct parenthesized always-multi-line expression,
+; force hardline before the operator for idempotence.
+; Example: (if a then b else c) // 10
+(bin_op_expr
+  (parenthesized_expr
+    [(if_else_expr) (let_in_expr) (case_of_expr)]
+  )
+  (operator) @prepend_hardline
 )
 
 ; When a bin_op_expr operand is a function_call_expr containing a block_comment,

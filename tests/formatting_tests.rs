@@ -401,6 +401,7 @@ fn test_formatting_is_idempotent() {
         "record_field_if",
         "func_call_multiarg_paren_if",
         "binop_paren_if",
+        "let_binop_paren_if",
     ];
 
     for name in test_cases {
@@ -1257,6 +1258,13 @@ fn test_let_binding_if_formatting() {
     // If expression as a let binding value should be on a new line after =
     // since if-then-else always expands to multi-line (idempotence fix)
     run_fixture_test("let_binding_if");
+}
+
+#[test]
+fn test_let_binop_paren_if() {
+    // Binary op in let binding where an operand is a parenthesized if/let/case
+    // should force the = to break and the bin_op to be multi-line (idempotence fix)
+    run_fixture_test("let_binop_paren_if");
 }
 
 #[test]
