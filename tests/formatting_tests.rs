@@ -1228,3 +1228,10 @@ fn test_infix_declaration_formatting() {
 fn test_effect_module_formatting() {
     run_fixture_test("effect_module");
 }
+
+#[test]
+fn test_paren_if_in_func_call() {
+    // A function call with a parenthesized if-then-else should be idempotent:
+    // the if expansion should force the outer call to break too.
+    run_fixture_test("paren_if_in_func_call");
+}

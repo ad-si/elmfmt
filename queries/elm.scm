@@ -831,10 +831,29 @@
   (_)
 )
 
-; Lambda wrapped in parentheses as function call argument.
+; Parenthesized always-multi-line expression as function call argument.
 ; Force hardline before, after, and between all subsequent args,
-; since the lambda will always be multi-line but the function_call_expr
+; since the content will always be multi-line but the function_call_expr
 ; doesn't know this on the first pass.
+;
+; Direct always-multi-line content in parens: f (if ...), f (let ...), f (case ...)
+(function_call_expr
+  (_) @append_hardline
+  .
+  (parenthesized_expr
+    [(if_else_expr) (let_in_expr) (case_of_expr)]
+  )
+)
+
+(function_call_expr
+  (parenthesized_expr
+    [(if_else_expr) (let_in_expr) (case_of_expr)]
+  ) @append_hardline
+  .
+  (_)
+)
+
+; Lambda wrapped in parentheses as function call argument.
 ;
 ; Hardline before the paren-lambda (between function name and it)
 (function_call_expr
@@ -1259,10 +1278,19 @@
   (#single_line_only!)
 )
 
-; When parenthesized_expr contains a lambda with an always-multi-line body,
-; force the closing ) onto its own line for idempotence.
-; Without this, on the first pass the paren appears single-line and the
-; empty_softline for ) stays as nothing, but on the second pass it would expand.
+; When parenthesized_expr contains an always-multi-line expression
+; (if_else_expr, let_in_expr, case_of_expr), force the closing ) onto its own
+; line for idempotence. Without this, on the first pass the paren appears
+; single-line and the empty_softline for ) stays as nothing, but on the second
+; pass it would expand.
+;
+; Direct always-multi-line content: (if ...), (let ...), (case ...)
+(parenthesized_expr
+  [(if_else_expr) (let_in_expr) (case_of_expr)]
+  ")" @prepend_hardline
+)
+
+; Lambda with always-multi-line body: (\x -> if ...)
 (parenthesized_expr
   (anonymous_function_expr
     (arrow)
