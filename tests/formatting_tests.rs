@@ -242,6 +242,11 @@ fn test_record_field_let_formatting() {
 }
 
 #[test]
+fn test_record_field_if_formatting() {
+    run_fixture_test("record_field_if");
+}
+
+#[test]
 fn test_record_type_multiline_formatting() {
     run_fixture_test("record_type_multiline");
 }
@@ -385,6 +390,7 @@ fn test_formatting_is_idempotent() {
         "comments",
         "anonymous_function",
         "type_alias",
+        "record_field_if",
     ];
 
     for name in test_cases {

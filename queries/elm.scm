@@ -1084,6 +1084,64 @@
   "|" @append_space
 )
 
+; Records containing always-multi-line expressions (if, let, case) in field values
+; must force multi-line formatting for idempotence. The @append_hardline on
+; record_base_identifier overrides the @append_spaced_softline above, and
+; @prepend_hardline on "}" overrides the @prepend_spaced_softline on "}".
+(record_expr
+  (record_base_identifier) @append_hardline
+  (field
+    (eq)
+    .
+    (if_else_expr)
+  )
+  "}" @prepend_hardline
+)
+(record_expr
+  (record_base_identifier) @append_hardline
+  (field
+    (eq)
+    .
+    (let_in_expr)
+  )
+  "}" @prepend_hardline
+)
+(record_expr
+  (record_base_identifier) @append_hardline
+  (field
+    (eq)
+    .
+    (case_of_expr)
+  )
+  "}" @prepend_hardline
+)
+
+; Record literals (no base identifier) containing always-multi-line expressions
+(record_expr
+  (field
+    (eq)
+    .
+    (if_else_expr)
+  )
+  "}" @prepend_hardline
+)
+(record_expr
+  (field
+    (eq)
+    .
+    (let_in_expr)
+  )
+  "}" @prepend_hardline
+)
+(record_expr
+  (field
+    (eq)
+    .
+    (case_of_expr)
+  )
+  "}" @prepend_hardline
+)
+
 ; End indent before } in record updates
 (record_expr
   (record_base_identifier)
@@ -1110,6 +1168,20 @@
   (eq)
   .
   (let_in_expr) @prepend_hardline @prepend_indent_start @append_indent_end
+)
+
+; If expressions in record fields: put if on new line after = with extra indent
+; Since if expressions are always multi-line (then gets @prepend_hardline),
+; use hardline for idempotence
+;   { field =
+;       if condition
+;         then value1
+;         else value2
+;   }
+(field
+  (eq)
+  .
+  (if_else_expr) @prepend_hardline @prepend_indent_start @append_indent_end
 )
 
 ; Block comments inside records on their own line
